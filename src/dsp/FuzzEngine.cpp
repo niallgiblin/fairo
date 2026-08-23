@@ -90,8 +90,7 @@ void FuzzEngine::reset()
     clip2.reset();
     fuzzGainSmoothed.reset(fuzzToGain(0.5f));
     volumeSmoothed.reset(0.6f);
-    // JUCE Oversampling keeps no continuous-time state beyond its filters; they
-    // are reset with initProcessing(), which prepare() already calls.
+    oversampling.reset();  // clear the polyphase filter state too
 }
 
 void FuzzEngine::processBlock(const float* src, float* dst, int numSamples)
