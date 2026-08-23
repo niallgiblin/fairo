@@ -1,0 +1,190 @@
+T0,0 [y=  128 x=    0] Modified"
+T0,0 [y=  216 x=    0] www.BigMuffP:
+T1,0 [y=  128 x=  315] "47" Ram's F
+T1,0 [y=  445 x=  376] (hi-lo switch)
+T1,0 [y=  481 x=  459] R2
+T2,0 [y=  142 x=  676] Head Big N
+T2,0 [y=  356 x=  933] R13
+T2,0 [y=  394 x=  926] 10k
+T3,0 [y=  435 x= 1329] Cб
+T3,0 [y=  473 x= 1289] .047u
+T4,0 [y=   28 x= 1564] Silicon tran
+T4,0 [y=   74 x= 1564] Silicon dior
+T4,0 [y=  127 x= 1561] Tantalum c
+T4,0 [y=  173 x= 1562] Film caps a
+T4,0 [y=  218 x= 1562] Ceramic ca
+T4,0 [y=  351 x= 1592] R18
+T4,0 [y=  388 x= 1591] 10k
+T4,0 [y=  407 x= 1452] D4
+T4,0 [y=  432 x= 1431] 1N914
+T4,0 [y=  474 x= 1335] 17pF
+T5,0 [y=   27 x= 1675] transistors • Metalfiln
+T5,0 [y=   76 x= 1675] diodes at D1/D2 - 1N4001
+T5,0 [y=  125 x= 1675] m capacitors (polarized) at
+T5,0 [y=  176 x= 1675] os at C1, C3,C4, C5, C6,C7,
+T5,0 [y=  222 x= 1675] c caps at C10,C11,C12
+T5,0 [y=  358 x= 1827] (Silicon-Germa
+T5,0 [y=  400 x= 1957] On/Off
+T5,0 [y=  461 x= 1856] C7
+T5,0 [y=  484 x= 1979] 20ci
+T6,0 [y=   75 x= 2015] 01 • Germanium diode
+T6,0 [y=  343 x= 2320] R11
+T6,0 [y=  360 x= 2015] manium switch.
+T6,0 [y=  379 x= 2318] 10k
+T6,0 [y=  430 x= 2159] DIK
+T6,0 [y=  475 x= 2112] D2
+T7,0 [y=   31 x= 2355] ear taper potentiometers
+T7,0 [y=  343 x= 2355] 11
+T7,0 [y=  379 x= 2355] ık
+T8,0 [y=  202 x= 3016] Circu
+T8,0 [y=  356 x= 2836] R7
+T8,0 [y=  355 x= 3012] R6
+T8,0 [y=  393 x= 2832] 470k
+T8,0 [y=  391 x= 3008] 10k
+T9,0 [y=   34 x= 3148] BIG WUFF
+T9,0 [y=   80 x= 3208] PAGE
+T9,0 [y=  128 x= 3173] The cefinitive Big Mutt
+T9,0 [y=  152 x= 3179] respurce and history
+T9,0 [y=  204 x= 3035] ircuit traced by Kit Rae.
+T9,0 [y=  244 x= 3249] © Kit Rae
+T9,0 [y=  390 x= 3035] Dk
+T0,1 [y=  559 x=  298] SW2
+T0,1 [y=  764 x=   16] INPUTI
+T0,1 [y=  864 x=  121] sw 1a
+T1,1 [y=  482 x=  459] R2
+T1,1 [y=  517 x=  446] 39k
+T1,1 [y=  681 x=  446] R27
+T1,1 [y=  714 x=  435] 390k
+T1,1 [y=  708 x=  583] C1
+T1,1 [y=  747 x=  542] 10pF*
+T2,1 [y=  522 x=  787] C10
+T2,1 [y=  518 x=  967] C4
+T2,1 [y=  559 x=  768] 470pF
+T2,1 [y=  554 x=  934] .47pF
+T2,1 [y=  665 x=  789] R9
+T2,1 [y=  698 x=  774] 470k
+T2,1 [y=  770 x= 1031] 3
+T2,1 [y=  794 x=  962] R24
+T2,1 [y=  823 x=  963] DIST
+T2,1 [y=  856 x=  768] Q4
+T2,1 [y=  862 x=  942] 100k
+T2,1 [y=  891 x=  735] MPSA18
+T2,1 [y=  926 x=  763] NPN
+T3,1 [y=  475 x= 1289] .047u
+T3,1 [y=  551 x=  995] uF
+T3,1 [y=  609 x= 1333] C12
+T3,1 [y=  703 x= 1340] R1
+T3,1 [y=  753 x= 1200] R19
+T3,1 [y=  789 x= 1195] 6.2k
+T3,1 [y=  823 x= 1093] HHM
+T3,1 [y=  871 x= 1123] C5
+T3,1 [y=  904 x= 1081] .047pF
+T4,1 [y=  475 x= 1335] 17pF
+T4,1 [y=  506 x= 1459] D3
+T4,1 [y=  531 x= 1432] 1N914
+T4,1 [y=  702 x= 1342] R17 470k
+T4,1 [y=  858 x= 1421] Q3
+T4,1 [y=  868 x= 1638] C13
+T4,1 [y=  898 x= 1398] 2N5089
+T4,1 [y=  905 x= 1608] .047pF
+T4,1 [y=  931 x= 1420] NPN
+T5,1 [y=  462 x= 1859] C7
+T5,1 [y=  493 x= 1797] .047uF sw 3Osi
+T5,1 [y=  587 x= 1866] diode
+T5,1 [y=  586 x= 2014] OG
+T5,1 [y=  623 x= 1860] bypass
+T5,1 [y=  720 x= 1847] C11470pF
+T5,1 [y=  756 x= 1721] R12
+T5,1 [y=  779 x= 2032] R1
+T5,1 [y=  791 x= 1721] 6.2k
+T5,1 [y=  826 x= 1675] HW
+T5,1 [y=  905 x= 1675] pF
+T6,1 [y=  475 x= 2112] D2
+T6,1 [y=  493 x= 2153] *
+T6,1 [y=  568 x= 2110] D5
+T6,1 [y=  595 x= 2015] QGe
+T6,1 [y=  610 x= 2119] D6
+T6,1 [y=  780 x= 2031] R15 470k
+T6,1 [y=  858 x= 2134] Q2
+T6,1 [y=  899 x= 2111] 2N5089
+T6,1 [y=  932 x= 2133] NPN
+T7,1 [y=  551 x= 2468] C9
+T7,1 [y=  559 x= 2663] RS
+T7,1 [y=  587 x= 2433] .01uF
+T7,1 [y=  594 x= 2640] 470k
+T7,1 [y=  792 x= 2511] R25
+T7,1 [y=  822 x= 2500] TONE
+T7,1 [y=  855 x= 2497] 250k
+T7,1 [y=  873 x= 2698] C3
+T7,1 [y=  911 x= 2662] .047
+T8,1 [y=  559 x= 3051] C2
+T8,1 [y=  590 x= 3033] 10g
+T8,1 [y=  631 x= 2695] V
+T8,1 [y=  823 x= 3021] VOLI
+T8,1 [y=  862 x= 2848] Q1
+T8,1 [y=  856 x= 3059] 10
+T8,1 [y=  898 x= 2823] 2N5089
+T8,1 [y=  931 x= 2846] NPN
+T9,1 [y=  555 x= 3041] C2
+T9,1 [y=  591 x= 3035] 10uF
+T9,1 [y=  792 x= 3073] R26
+T9,1 [y=  817 x= 3326] <OUTPUT
+T9,1 [y=  856 x= 3058] 100k
+T9,1 [y=  863 x= 3191] sw 1b
+T0,2 [y= 1009 x=  276] R1
+T0,2 [y= 1046 x=  274] 2M
+T0,2 [y= 1257 x=  123] A Big Muff clor
+T0,2 [y= 1301 x=  124] switch, affectir
+T0,2 [y= 1343 x=  124] replaces the RE
+T0,2 [y= 1383 x=  132] and resistor at
+T1,2 [y= 1012 x=  628] R14
+T1,2 [y= 1049 x=  610] 100k
+T1,2 [y= 1386 x=  315] at C9 and R5 on the high
+T2,2 [y=  924 x=  763] NPN
+T2,2 [y= 1012 x=  655] 14
+T2,2 [y= 1011 x=  935] R22
+T2,2 [y= 1049 x=  655] DK
+T2,2 [y= 1051 x=  933] 1k
+T2,2 [y= 1340 x=  655] a variant on the AMZ tor
+T3,2 [y= 1010 x= 1077] R23
+T3,2 [y= 1011 x= 1294] R20
+T3,2 [y= 1047 x= 1075] 1k
+T3,2 [y= 1048 x= 1277] 100k
+T3,2 [y= 1258 x=  995] BMP circuit, with several
+T3,2 [y= 1297 x=  995] T switch in the second c
+T3,2 [y= 1386 x=  995] r less mid range scoop th
+T4,2 [y=  930 x= 1418] NPN
+T4,2 [y= 1010 x= 1335] 0
+T4,2 [y= 1008 x= 1597] R21
+T4,2 [y= 1046 x= 1592] 1000
+T4,2 [y= 1253 x= 1335] eral mods that allow for a
+T4,2 [y= 1300 x= 1335] d clipping stage toggles
+T4,2 [y= 1343 x= 1335] I) allowing a boost to the
+T4,2 [y= 1380 x= 1335] than the "47" Ram's Hea
+T5,2 [y= 1014 x= 1991] R16
+T5,2 [y= 1049 x= 1973] 100k
+T5,2 [y= 1257 x= 1675] or a wide range of tonal c
+T5,2 [y= 1300 x= 1675] les between bypassing th
+T6,2 [y=  932 x= 2132] NPN
+T6,2 [y= 1014 x= 2015] 16
+T6,2 [y= 1008 x= 2212] R10
+T6,2 [y= 1042 x= 2183] 1000
+T6,2 [y= 1049 x= 2015] 0k
+T6,2 [y= 1301 x= 2015] g the diodes, or switching
+T6,2 [y= 1344 x= 2015] s cap at C8 was enlargec
+T7,2 [y= 1010 x= 2475] R8
+T7,2 [y= 1005 x= 2637] C8
+T7,2 [y= 1039 x= 2476] HIGH
+T7,2 [y= 1041 x= 2627] .022uF
+T7,2 [y= 1071 x= 2474] 25k
+T7,2 [y= 1343 x= 2355] ged to 2.2pF to balance t
+T8,2 [y=  931 x= 2846] NPN
+T8,2 [y= 1004 x= 2842] R3
+T8,2 [y= 1007 x= 3010] R4
+T8,2 [y= 1041 x= 2834] 100k
+T8,2 [y= 1047 x= 3005] 2.2k
+T8,2 [y= 1255 x= 2695] converted to a hi (39k) ar
+T8,2 [y= 1300 x= 2695] ium or Silicon diodes. A 2
+T9,2 [y= 1044 x= 3035] 2k
+T9,2 [y= 1256 x= 3035] ) and low (390k)
+T9,2 [y= 1344 x= 3035] g. The large cap

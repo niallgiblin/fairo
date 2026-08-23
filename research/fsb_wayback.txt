@@ -1,0 +1,120 @@
+
+freestompboxes.org • View topic - Learning what each component does in a specific circuit
+	
+	
+		
+freestompboxes.org
+		
+http://freestompboxes.org/
+		
+Learning what each component does in a specific circuit
+		
+http://freestompboxes.org/viewtopic.php?f=51&t=25076
+	
+	
+		
+Page 1 of 1
+		
+			
+				
+Learning what each component does in a specific circuit
+				
+Posted: 21 Sep 2014, 15:58
+				
+by SimonRichie
+				
+Hey all,
+I've been scouring the Web for this info, and even looked through several of the books linked in the library section, but I still can't find what I'm after.
+What I'm after is something that takes simple circuits, preferably actually existing pedal circuits, and starts from the beginning, explaining where the current comes from, where it goes to, what happens to it at each and every component. Does this capacitor act as a high-pass filter? What's the point of this 10K resistor, and if I change the value what should happen? Etc.
+I'm hoping to find something like this that's pedal-related, rather than generally electronics-related, but anything anyone can suggest would be much appreciated.
+-SR
+			
+			
+		
+			
+				
+Re: Learning what each component does in a specific circuit
+				
+Posted: 21 Sep 2014, 16:29
+				
+by Nocentelli
+				
+It depends on how technical you want to get, but some good pedal-specific guides are:
+LPB-1: Really basic, but good overview of all components commonly encountered in pedal circuits, then a specific look at the dead simple (1 transistor) EHX LPB-1 linear power booster 
+http://www.beavisaudio.com/techpages/Sc ... ToReality/
+Big Muff Pi: A nice diagram giving a simple explanation of what each part does and how altering each section will affect the sound - 
+http://www.kitrae.net/music/Images_Secr ... 0GUIDE.jpg
+RG Keen's geofx "technology of..." articles assume a bit more technical knowledge, but it's a simple matter to read wikipedia explanations of common building blocks RG references if you're not sure. 
+Tubescreamer:
+http://www.geofex.com/article_folders/t ... sxtech.htm
+Fuzzface:
+http://www.geofex.com/article_folders/f ... fffram.htm
+For a general overview on filters, there is a lot of useful stuff all in one place at:
+http://sound.westhost.com/articles/acti ... ers.htm#s1
+For lots of general pedal-related "how does it work?" information, the beavis audio, geofx and amz websites are chock full, and just require a bit of searching.
+			
+			
+		
+			
+				
+Re: Learning what each component does in a specific circuit
+				
+Posted: 21 Sep 2014, 17:43
+				
+by tabbycat
+				
+hey simon, welcome to the forum.
+i posted a similar-ish (or related, extending from) question a couple of months ago and got some useful answers and links from members here. if it's helpful to you, here's the post.
+RG's comments about 'a minimum cut set' have proven a great 'tool' since for dissecting schematics.
+viewtopic.php?f=20&t=24846
+			
+			
+		
+			
+				
+Re: Learning what each component does in a specific circuit
+				
+Posted: 22 Sep 2014, 10:12
+				
+by Blitz Krieg
+				
+what was that website that had animations illustrating current?  you could put in different values and watch it go fast or slow or oscillate.  i thought it was duncans amps page, but can't find the models
+			
+			
+		
+			
+				
+Re: Learning what each component does in a specific circuit
+				
+Posted: 22 Sep 2014, 17:21
+				
+by Nocentelli
+				
+http://www.falstad.com/circuit
+Perhaps?
+			
+			
+		
+			
+				
+Re: Learning what each component does in a specific circuit
+				
+Posted: 30 Nov 2014, 18:29
+				
+by 7tenths
+				
+Hi all
+I'm new here, just wanted to say a quick thank you to the OP for asking what I was thinking  and for all the links, this is a really helpful place   
+Cheers !
+			
+			
+		
+	
+	
+		
+All times are UTC [ DST ]
+Page 1 of 1
+		
+Powered by phpBB® Forum Software © phpBB Group
+http://www.phpbb.com/
+	

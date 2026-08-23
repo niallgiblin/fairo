@@ -1,0 +1,45 @@
+# Build
+build/
+cmake-build-*/
+out/
+compile_commands.json
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+Testing/
+
+# IDE
+.idea/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+.vscode/
+
+# macOS
+.DS_Store
+
+# JUCE / plugin binaries
+*.vst3
+*.component
+*.a
+*.dylib
+*.so
+
+# FetchContent
+_deps/
+
+# Python sandbox
+__pycache__/
+*.pyc
+.venv/
+venv/
+python/.venv/
+
+# Generated research plots are kept; temp files are not
+*.swp
+*~
+*.log
+.env
+.env.*
+.cache/

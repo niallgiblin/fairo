@@ -1,0 +1,159 @@
+[px y=    29 x=   972] AHAA
+[px y=    34 x=  2023] C11470pF
+[px y=    37 x=   869] 390k
+[px y=    51 x=  1577] R17 470k
+[px y=    72 x=  1004] 470k
+[px y=   103 x=   889] R27
+[px y=   138 x=  1045] R9
+[px y=   186 x=   760] ow
+[px y=   218 x=  2051] bypass
+[px y=   245 x=  1553] C12 470pF
+[px y=   245 x=  2743] D7
+[px y=   248 x=  2564] D6
+[px y=   268 x=  1138] -
+[px y=   277 x=  3042] 470k
+[px y=   287 x=  3260] 10uF
+[px y=   290 x=  2626] .01uF
+[px y=   293 x=  2054] diode
+[px y=   296 x=  2360] OGe
+[px y=   330 x=  2551] D5
+[px y=   347 x=  3087] R5
+[px y=   350 x=   589] sw2oW
+[px y=   352 x=   992] 470pF
+[px y=   356 x=  1329] .47pF
+[px y=   356 x=  3271] C2
+[px y=   365 x=  2705] C9
+[px y=   403 x=  1765] 1N914
+[px y=   424 x=  1043] C10
+[px y=   428 x=  1396] C4
+[px y=   434 x=   892] 39k
+[px y=   454 x=  1812] D3
+[px y=   487 x=  1943] .047uF sw 3Osi LD2S
+[px y=   503 x=   913] R2
+[px y=   519 x=  1468] .047pF
+[px y=   544 x=  2047] C7
+[px y=   576 x=   536] ch)
+[px y=   576 x=   751] (hi-lo switch)
+[px y=   595 x=  1557] C6
+[px y=   603 x=  1759] 1N914
+[px y=   632 x=  2655] D1
+[px y=   654 x=  1801] 04
+[px y=   663 x=  2242] On/Off/On)
+[px y=   685 x=  1277] S10k
+[px y=   685 x=  3211] 10k
+[px y=   689 x=  2071] 10k
+[px y=   708 x=  2398] 10k
+[px y=   713 x=   256] and resistor at C9 and R5 on t
+[px y=   713 x=  1670] Head, and more pronounced highs.
+[px y=   746 x=  1983] (Silicon-Germanium switch.
+[px y=   746 x=  2236] h.
+[px y=   749 x=  1280] 2R13
+[px y=   755 x=  2869] R7
+[px y=   755 x=  3220] R6
+[px y=   767 x=  2082] R18
+[px y=   778 x=  2404] R11
+[px y=   798 x=  2803] ow pass filtering. The large cap
+[px y=   799 x=  1673] the highs. The low pass cap at C8 was e
+[px y=   799 x=  2236] as enlarged to 2.2uF to balance the low
+[px y=   801 x=   262] replaces the R8 low pass resis
+[px y=   801 x=   536] esistor (a variant on the AMZ tone/prese
+[px y=   883 x=   262] switch, affecting the low cut
+[px y=   883 x=  1670] les between bypassing the diodes, or su
+[px y=   886 x=   536] cut in the input stage. An SPDT switch it
+[px y=   886 x=  2803] Silicon diodes. A 25k pot
+[px y=   971 x=   263] A Big Muff clone by, very simil
+[px y=   971 x=  1670] or a wide range of tonal divertsity. The F
+[px y=   975 x=  2803] ted to a hi (39k) and low (390k)
+[px y=   976 x=  3688] © Kit Rae
+[px y=  1020 x=  1670] c caps at C10, C11,C12
+[px y=  1031 x=  2021] Ceramic ca
+[px y=  1035 x=     0] www.BigMuffPage.com
+[px y=  1054 x=  3223] Circuit traced by Kit Rae.
+[px y=  1114 x=  1670] ps at C1, C3, C4, C5, C6, C7, C8, C9, C13,
+[px y=  1120 x=  2022] Film caps a
+[px y=  1163 x=  3548] Tesource and history
+[px y=  1196 x=  3512] The cetritve Bia Mut
+[px y=  1211 x=  1670] m capacitors (polarized) at C1, C2
+[px y=  1220 x=  2018] Tantalum c
+[px y=  1308 x=  3614] PAGE
+[px y=  1316 x=  1670] diodes at D1/D2 -1N4001 • Germaniun
+[px y=  1318 x=  2022] Sillicon dioc
+[px y=  1338 x=  3226] EUE LUED
+[px y=  1344 x=  2705] 25k
+[px y=  1384 x=  1320] 1k
+[px y=  1385 x=   683] 100k
+[px y=  1387 x=  2275] 100k
+[px y=  1390 x=  1613] 1k
+[px y=  1391 x=  3214] 2.2k
+[px y=  1393 x=   541] 2M
+[px y=  1393 x=  1449] 100k
+[px y=  1393 x=  2079] 1000
+[px y=  1399 x=  3493] BIG WUFF
+[px y=  1402 x=  2700] 1000
+[px y=  1402 x=  2866] 100k
+[px y=  1406 x=  2236] • Linear taper potentiometers
+[px y=  1407 x=  1670] transistors • Metal film resistors •
+[px y=  1409 x=  2706] HIGH
+[px y=  1409 x=  2977] -.022pF
+[px y=  1412 x=  2022] Silicon tran
+[px y=  1440 x=  3837] •I-
+[px y=  1457 x=  2311] R16
+[px y=  1462 x=   719] R14
+[px y=  1463 x=  1321] R22
+[px y=  1463 x=  1484] R20
+[px y=  1463 x=  2705] R8
+[px y=  1465 x=  1103] 23
+[px y=  1465 x=  1616] R23
+[px y=  1466 x=   539] R1
+[px y=  1466 x=  2236] 10
+[px y=  1466 x=  2754] R10
+[px y=  1468 x=  2089] R21
+[px y=  1471 x=  3219] R4
+[px y=  1475 x=  3039] C8
+[px y=  1476 x=  2879] R3
+[px y=  1622 x=  2596] NPN
+[px y=  1623 x=  2888] NPN
+[px y=  1624 x=  1735] NPN
+[px y=  1632 x=   980] NPN
+[px y=  1664 x=  3084] .047pF
+[px y=  1674 x=  1670] TpF
+[px y=  1674 x=  2110] .047pF
+[px y=  1677 x=  1624] .047
+[px y=  1690 x=  1692] 2N5089
+[px y=  1690 x=  2554] 2N5089
+[px y=  1692 x=  2847] 2N5089
+[px y=  1692 x=  3408] 2N
+[px y=  1704 x=   939] MPSA18
+[px y=  1739 x=  3158] C3
+[px y=  1743 x=  1143] C5
+[px y=  1745 x=  1711] C5
+[px y=  1748 x=  1670] 13
+[px y=  1749 x=  2171] C13
+[px y=  1758 x=  3580] sw 1b
+[px y=  1759 x=   243] sw 1a
+[px y=  1759 x=  1347] 100k
+[px y=  1761 x=  2895] Q1
+[px y=  1768 x=  1741] Q3
+[px y=  1770 x=  2596] Q2
+[px y=  1772 x=   992] Q4
+[px y=  1774 x=  3312] 100k
+[px y=  1775 x=  2758] 250k
+[px y=  1837 x=  1390] DIST:
+[px y=  1840 x=  2764] TONE
+[px y=  1841 x=  3238] VOLUME
+[px y=  1894 x=  3850] OUTPUT
+[px y=  1899 x=  1390] R24
+[px y=  1902 x=  2800] R25
+[px y=  1902 x=  3344] R26
+[px y=  1903 x=  1770] 6.2k
+[px y=  1906 x=  1287] 6.2k
+[px y=  1925 x=  2391] R15 470k
+[px y=  1973 x=  1773] R12
+[px y=  1979 x=  1299] R19
+[px y=  1989 x=   546] 10pF
+[px y=  2047 x=  2023] C11470pF
+[px y=  2055 x=   869] 390k
+[px y=  2070 x=   631] C1
+[px y=  2079 x=  1571] R17470k
+[px y=  2096 x=  1004] 470k
+[px y=  2120 x=   892] HZT

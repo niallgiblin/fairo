@@ -1,0 +1,6 @@
+# Fairo offline sandbox (Phase 0 of PLAN.md) — prototypes the DSP math in
+# Python before porting to C++. Cross-validation data lives in tests/data/.
+numpy>=1.26
+scipy>=1.11
+sympy>=1.12
+matplotlib>=3.8
