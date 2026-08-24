@@ -1,5 +1,6 @@
 # Build
 build/
+build-*/
 cmake-build-*/
 out/
 compile_commands.json
@@ -43,3 +44,8 @@ python/.venv/
 .env
 .env.*
 .cache/
+
+# Phase 3 neural artifacts (regenerate via training/make_dataset.py)
+training/data/
+training/artifacts/
+training/.venv/

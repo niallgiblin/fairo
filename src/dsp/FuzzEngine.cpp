@@ -98,6 +98,26 @@ void FuzzEngine::processBlock(const float* src, float* dst, int numSamples)
     if (!prepared || numSamples <= 0 || src == nullptr || dst == nullptr)
         return;
 
+    // ── Neural path (Phase 3): the trained GRU replaces the whole DSP chain ──
+    // (it was trained on the full pedal at Volume 0.5; the engine's Volume
+    // knob applies afterwards). No oversampling needed for the model itself.
+    if (neural != nullptr)
+    {
+        const float cond[4] = { fuzzParam, toneParam, highParam,
+                                hiLo ? 1.0f : 0.0f };
+        neural->processBlock(src, dst, numSamples, cond);
+
+        // Volume + gentle limit (same as the tail of the DSP chain).
+        for (int i = 0; i < numSamples; ++i)
+        {
+            float x = dst[i] * volumeSmoothed.getNextValue();
+            x = static_cast<float>(circuit::kOutputSoftLimit)
+                * std::tanh(x / static_cast<float>(circuit::kOutputSoftLimit));
+            dst[i] = x;
+        }
+        return;
+    }
+
     // ── Oversample (JUCE 8 API: processSamplesUp returns the upsample block) ─
     osBuffer.copyFrom(0, 0, src, numSamples);
     juce::dsp::AudioBlock<float> inBlock(osBuffer);
@@ -156,7 +176,8 @@ float FuzzEngine::processSampleInternal(float x) noexcept
 
 void FuzzEngine::setFuzz(float v) noexcept
 {
-    fuzzGainSmoothed.setTargetValue(fuzzToGain(v));
+    fuzzParam = std::clamp(v, 0.0f, 1.0f);
+    fuzzGainSmoothed.setTargetValue(fuzzToGain(fuzzParam));
 }
 
 void FuzzEngine::setVolume(float v) noexcept
@@ -167,11 +188,13 @@ void FuzzEngine::setVolume(float v) noexcept
 
 void FuzzEngine::setTone(float v) noexcept
 {
+    toneParam = std::clamp(v, 0.0f, 1.0f);
     toneStack.setTonePot(v);
 }
 
 void FuzzEngine::setHigh(float v) noexcept
 {
+    highParam = std::clamp(v, 0.0f, 1.0f);
     toneStack.setHighPot(v);
 }
 
@@ -190,6 +213,11 @@ void FuzzEngine::setClipMode(ClipMode mode) noexcept
         return;
     clipMode = mode;
     applyClipMode();
+}
+
+void FuzzEngine::setNeuralInference(FuzzNeuralInference* n) noexcept
+{
+    neural = n;
 }
 
 void FuzzEngine::applyClipMode() noexcept

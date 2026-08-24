@@ -12,10 +12,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Download ONNX Runtime
+        run: |
+          ARCH=$(uname -m)
+          ONNX_URL="https://github.com/microsoft/onnxruntime/releases/download/v1.24.4/onnxruntime-osx-${ARCH}-1.24.4.tgz"
+          curl -sL "$ONNX_URL" -o /tmp/onnxruntime.tgz
+          tar xzf /tmp/onnxruntime.tgz -C /tmp
+          echo "ONNXRUNTIME_ROOT=/tmp/onnxruntime-osx-${ARCH}-1.24.4" >> "$GITHUB_ENV"
+
       - name: Configure
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
-            -DFA_BUILD_STANDALONE=ON
+            -DFA_BUILD_STANDALONE=ON \
+            -DFA_ENABLE_ONNX=ON -DONNXRUNTIME_ROOT="$ONNXRUNTIME_ROOT"
 
       - name: Build plugin and tests
         run: cmake --build build --config Release --parallel

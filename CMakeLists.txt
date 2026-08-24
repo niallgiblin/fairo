@@ -95,6 +95,23 @@ juce_add_plugin(Fairo
     DESCRIPTION                 "Pharaoh-style fuzz: switchable clipping, coupled Tone/High stack"
 )
 
+# ─────────────────────────────────────────────────────────────────
+# BinaryData — Phase 3 neural models (embedded; empty without ONNX)
+# ─────────────────────────────────────────────────────────────────
+
+set(FAIRO_BINARY_SOURCES)
+if(FA_ENABLE_ONNX)
+    list(APPEND FAIRO_BINARY_SOURCES
+        "${CMAKE_SOURCE_DIR}/assets/fuzz_silicon.onnx"
+        "${CMAKE_SOURCE_DIR}/assets/fuzz_germanium.onnx"
+        "${CMAKE_SOURCE_DIR}/assets/fuzz_bypass.onnx"
+    )
+endif()
+
+if(FAIRO_BINARY_SOURCES)
+    juce_add_binary_data(FairoData SOURCES ${FAIRO_BINARY_SOURCES})
+endif()
+
 juce_generate_juce_header(Fairo)
 
 # ─────────────────────────────────────────────────────────────────
@@ -111,6 +128,9 @@ target_sources(Fairo PRIVATE
     src/dsp/RcNetwork.cpp
     src/dsp/ToneStack.cpp
     src/dsp/FuzzEngine.cpp
+
+    # Phase 3 neural inference (ONNX Runtime)
+    src/inference/FuzzNeuralInference.cpp
 )
 
 # ─────────────────────────────────────────────────────────────────
@@ -119,6 +139,7 @@ target_sources(Fairo PRIVATE
 
 target_include_directories(Fairo PRIVATE
     "${CMAKE_SOURCE_DIR}/src"
+    "${CMAKE_BINARY_DIR}/Fairo_JuceHeader"
 )
 
 if(FA_ENABLE_ONNX)
@@ -193,6 +214,7 @@ if(FA_ENABLE_ONNX)
     set_target_properties(Fairo PROPERTIES
         BUILD_RPATH "${ONNXRUNTIME_ROOT}/lib"
     )
+    target_link_libraries(Fairo PRIVATE FairoData)
 endif()
 
 # ─────────────────────────────────────────────────────────────────
@@ -200,15 +222,17 @@ endif()
 # ─────────────────────────────────────────────────────────────────
 
 if(FA_BUILD_TESTS)
-    add_executable(FairoTests
+    set(FAIRO_TEST_DSP_SOURCES
         tests/DspTests.cpp
-
-        # DSP sources compiled into the test executable (JUCE-free DSP core)
         src/dsp/DiodeClipper.cpp
         src/dsp/RcNetwork.cpp
         src/dsp/ToneStack.cpp
         src/dsp/FuzzEngine.cpp
+        # Stub implementation when built without ONNX; real session when enabled
+        src/inference/FuzzNeuralInference.cpp
     )
+
+    add_executable(FairoTests ${FAIRO_TEST_DSP_SOURCES})
 
     target_include_directories(FairoTests PRIVATE
         "${CMAKE_SOURCE_DIR}/src"
@@ -220,6 +244,19 @@ if(FA_BUILD_TESTS)
         FA_PLUGIN_VERSION="${PROJECT_VERSION}"
         "FA_REPO_ROOT=\"${CMAKE_SOURCE_DIR}\""
     )
+
+    if(FA_ENABLE_ONNX)
+        target_sources(FairoTests PRIVATE tests/NeuralTests.cpp)
+        target_compile_definitions(FairoTests PRIVATE FA_ENABLE_ONNX=1)
+        target_include_directories(FairoTests PRIVATE
+            "${ONNX_INCLUDE_DIR}" "${ONNX_INCLUDE_DIR}/onnxruntime"
+            "${CMAKE_BINARY_DIR}/Fairo_JuceHeader")
+        target_link_libraries(FairoTests PRIVATE "${ONNX_LIB}" FairoData)
+        add_test(NAME fairo_neural_tests COMMAND FairoTests "[neural]")
+        set_tests_properties(fairo_neural_tests PROPERTIES LABELS "unit;onnx")
+        add_test(NAME fairo_neural_latency COMMAND FairoTests "[neural][latency][benchmark]")
+        set_tests_properties(fairo_neural_latency PROPERTIES LABELS "onnx;benchmark")
+    endif()
 
     if(APPLE)
         target_compile_options(FairoTests PRIVATE

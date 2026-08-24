@@ -23,6 +23,7 @@
 #include "DiodeClipper.h"
 #include "RcNetwork.h"
 #include "ToneStack.h"
+#include "inference/FuzzNeuralInference.h"
 
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_dsp/juce_dsp.h>
@@ -54,8 +55,12 @@ public:
     void setHiLo(bool hi) noexcept;    // Hi/Lo input switch
     void setClipMode(ClipMode mode) noexcept;
 
+    /** @brief Route through the trained neural model (Phase 3). nullptr = DSP. */
+    void setNeuralInference(FuzzNeuralInference* neural) noexcept;
+
     ClipMode getClipMode() const noexcept { return clipMode; }
     bool getHiLo() const noexcept { return hiLo; }
+    bool isNeural() const noexcept { return neural != nullptr; }
 
 private:
     /** One sample at the oversampled rate (no allocation). */
@@ -69,6 +74,7 @@ private:
     ToneStack toneStack;
     DiodeClipper clip1;
     DiodeClipper clip2;
+    FuzzNeuralInference* neural = nullptr;  // Phase 3 swap (A/B with DSP)
     // One 2x polyphase allpass stage (JUCE: `factor` = number of 2x stages).
     juce::dsp::Oversampling<float> oversampling{
         1, 1, juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR };
@@ -81,6 +87,7 @@ private:
     ClipMode clipMode = ClipMode::Silicon;
     bool hiLo = false;                  // false = Lo
     bool prepared = false;
+    float fuzzParam = 0.5f, toneParam = 0.5f, highParam = 0.5f;
 };
 
 } // namespace fairo

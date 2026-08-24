@@ -7,11 +7,14 @@ Pi variant with switchable clipping and the dual Tone/High tonestack.
 Built on the scaffolding conventions of the author's **fuzzyband** project
 (JUCE 8, C++20, FetchContent, Catch2 tests).
 
-> **Status**: Phases 0–2 + Phase 4 basics done (see [PLAN.md](PLAN.md)). The
-> DSP chain — input Hi/Lo stage, Shockley-based Newton–Raphson diode clippers,
-> real coupled Tone/High stack, output stage, 2× oversampling — is working,
-> unit-tested, and cross-validated against the Python sandbox. Component
-> values are the schematic-trace values extracted in `research/report.md`.
+> **Status**: Phases 0–2, Phase 3 (SPICE + neural), Phase 4 basics done (see
+> [PLAN.md](PLAN.md)). A full ngspice model of the Pharaoh is built from the
+> schematic-trace values (`spice/`), validated, and used to generate a
+> synthetic dry/wet training corpus (`training/data/`, 4 min per branch from
+> the author's own DI recordings). Per-branch WaveNet-class models are
+> trained, exported to ONNX (`assets/fuzz_*.onnx`) and run through ONNX
+> Runtime at <1 ms/512-block (p95) behind a **DSP/Neural engine switch** in
+> the UI - DSP-only remains the fallback.
 
 ## Signal path
 
@@ -72,13 +75,24 @@ python3 python/tonestack.py       # impulse responses -> tests/data/tonestack_im
 
 `research/` holds schematic references and extracted component evidence.
 
+## Neural engine (Phase 3, optional)
+
+Build with `-DFA_ENABLE_ONNX=ON -DONNXRUNTIME_ROOT=/path/to/onnxruntime`
+(ARM64 macOS release matching the CI step), then use the **Engine** switch
+(DSP / Neural) in the editor for a like-for-like A/B. The neural models are
+trained per clip-branch on SPICE-simulated pairs with randomized control
+settings across all Hi/Lo × Si/Ge/Bypass combinations; DSB-only builds ship
+unchanged.
+
 ## Roadmap
 
 - [x] Phase 0 — scaffolding, parameter layout, Python sandbox
 - [x] Phase 1 — input stage + fixed first clipper (Newton-Raphson)
 - [x] Phase 2 — switchable second clipper + coupled tonestack + output stage
-- [~] Phase 4 — UI basics (knobs present), automatable params, 2× oversampling
-- [ ] Phase 3 — SPICE netlist, synthetic training data, neural refinement (ONNX)
+- [x] Phase 3 — ngspice netlist, SPICE-generated synthetic data, conditioned
+      WaveNet models + ONNX Runtime swap (DSP/Neural engine switch)
+- [~] Phase 4 — UI basics, automatable params, 2× oversampling (neural path
+      runs native-rate; DSP path oversampled)
 - [ ] Phase 5 — A/B validation against real-pedal references, CPU budget, release
 
 See [PLAN.md](PLAN.md) for full details, open questions, and sources.
