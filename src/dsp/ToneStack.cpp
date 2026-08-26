@@ -73,10 +73,14 @@ void ToneStack::rebuild()
     const double rHigh = circuit::kHighPotMax * static_cast<double>(highPot)
                        + 1.0;  // never fully open-circuit
 
-    // Tone pot: 250k with the wiper fraction t toward node A (bright side).
+    // Tone pot: 250k. t is the wiper fraction, 1 = toward node A (the bright /
+    // full-range side), 0 = toward node B (the low-passed/dark side).
+    // FIX (vs. the original): the old mapping had rSegA = t*max, so tone=1
+    // selected the dark node B and the knob read backwards vs. the real Pharaoh
+    // (tone maxed = muddy). Swapped so tone=1 -> bright node A, tone=0 -> dark.
     const double t = static_cast<double>(tonePot);
-    const double rSegA = std::max(t * circuit::kTonePotMax, 1.0);
-    const double rSegB = std::max((1.0 - t) * circuit::kTonePotMax, 1.0);
+    const double rSegA = std::max((1.0 - t) * circuit::kTonePotMax, 1.0);
+    const double rSegB = std::max(t * circuit::kTonePotMax, 1.0);
 
     // Netlist: node 0 = input (fed through the clip-2 source resistance),
     // node 1 = A, node 2 = B, node 3 = W (tone wiper), node 4 = OUT.

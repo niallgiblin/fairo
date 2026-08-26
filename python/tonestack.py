@@ -38,8 +38,11 @@ def make_network(r_high, tone):
     r_high = R8 resistance: more = weaker LP = brighter."""
     r_high = max(r_high, 1.0)  # never fully open-circuit
     t = float(tone)
-    r_seg_a = max(t * R_TONE_MAX, 1.0)
-    r_seg_b = max((1.0 - t) * R_TONE_MAX, 1.0)
+    # t=1 -> wiper toward node A (bright); t=0 -> node B (dark). (FIX: swapped
+    # from the original so the knob reads like the real Pharaoh, where tone up =
+    # brighter, not muddy.)
+    r_seg_a = max((1.0 - t) * R_TONE_MAX, 1.0)
+    r_seg_b = max(t * R_TONE_MAX, 1.0)
     return [
         ("C", 0, 1, C9),        # C9 -> node A
         ("R", 1, -1, R5),       # R5 470k to ground

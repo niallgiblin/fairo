@@ -21,7 +21,8 @@ public:
                           float rotaryEndAngle, juce::Slider&) override;
 };
 
-class FairoEditor final : public juce::AudioProcessorEditor
+class FairoEditor final : public juce::AudioProcessorEditor,
+                          public juce::Slider::Listener
 {
 public:
     explicit FairoEditor(FairoProcessor&);
@@ -29,6 +30,9 @@ public:
 
     void paint(juce::Graphics&) override;
     void resized() override;
+
+    /** Live value redraw: keep the numeric readout in sync while dragging. */
+    void sliderValueChanged(juce::Slider*) override;
 
 private:
     FairoProcessor& processor;
@@ -39,6 +43,7 @@ private:
     juce::Slider fuzzSlider, volumeSlider, toneSlider, highSlider;
     juce::ToggleButton hiLoButton;
     juce::ComboBox clipModeBox;
+    juce::ComboBox engineBox;
 
     FairoLookAndFeel lookAndFeel;
 
@@ -46,6 +51,7 @@ private:
         volumeAttachment, toneAttachment, highAttachment;
     juce::AudioProcessorValueTreeState::ButtonAttachment hiLoAttachment;
     juce::AudioProcessorValueTreeState::ComboBoxAttachment clipAttachment;
+    juce::AudioProcessorValueTreeState::ComboBoxAttachment engineAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FairoEditor)
 };

@@ -76,9 +76,39 @@ void FuzzEngine::prepare(double sampleRate, int maxBlockSize)
     volumeSmoothed.reset(sampleRate * circuit::kOversamplingFactor, 0.01);
     fuzzGainSmoothed.setCurrentAndTargetValue(fuzzToGain(0.5f));
     volumeSmoothed.setCurrentAndTargetValue(0.6f);
+    preparePresenceShelf(sampleRate * circuit::kOversamplingFactor);          // DSP path (oversampled)
+    computePresenceShelfCoeffs(sampleRate, shelfNB0, shelfNB1, shelfNB2,
+                               shelfNA1, shelfNA2);                            // neural path (native)
 
     prepared = true;
     reset();
+}
+
+void FuzzEngine::preparePresenceShelf(double sampleRate)
+{
+    computePresenceShelfCoeffs(sampleRate, shelfB0, shelfB1, shelfB2, shelfA1, shelfA2);
+}
+
+void FuzzEngine::computePresenceShelfCoeffs(double sampleRate,
+                                            double& b0, double& b1, double& b2,
+                                            double& a1, double& a2) noexcept
+{
+    // RBJ audio-EQ-cookbook 2nd-order high-shelf. Boosts above kPresenceShelfFc
+    // by kPresenceShelfGainDb to restore top-end that the distortion's harmonic
+    // content under-produces vs. the reference capture.
+    const double A  = std::pow(10.0, circuit::kPresenceShelfGainDb / 40.0);
+    const double w0 = 2.0 * juce::MathConstants<double>::pi * circuit::kPresenceShelfFc / sampleRate;
+    const double cs = std::cos(w0), sn = std::sin(w0);
+    const double alpha = (sn / 2.0) * std::sqrt(2.0);            // shelf slope S = 1
+    const double sA  = std::sqrt(A);
+    const double bb0 =  A * ((A + 1.0) + (A - 1.0) * cs + 2.0 * sA * alpha);
+    const double bb1 = -2.0 * A * ((A - 1.0) + (A + 1.0) * cs);
+    const double bb2 =  A * ((A + 1.0) + (A - 1.0) * cs - 2.0 * sA * alpha);
+    const double a0  =  (A + 1.0) - (A - 1.0) * cs + 2.0 * sA * alpha;
+    const double aa1 =  2.0 * ((A - 1.0) - (A + 1.0) * cs);
+    const double aa2 =  (A + 1.0) - (A - 1.0) * cs - 2.0 * sA * alpha;
+    b0 = bb0 / a0; b1 = bb1 / a0; b2 = bb2 / a0;
+    a1 = aa1 / a0; a2 = aa2 / a0;
 }
 
 void FuzzEngine::reset()
@@ -90,6 +120,8 @@ void FuzzEngine::reset()
     clip2.reset();
     fuzzGainSmoothed.reset(fuzzToGain(0.5f));
     volumeSmoothed.reset(0.6f);
+    shelfX1 = shelfX2 = shelfY1 = shelfY2 = 0.0f;
+    shelfNX1 = shelfNX2 = shelfNY1 = shelfNY2 = 0.0f;
     oversampling.reset();  // clear the polyphase filter state too
 }
 
@@ -98,21 +130,30 @@ void FuzzEngine::processBlock(const float* src, float* dst, int numSamples)
     if (!prepared || numSamples <= 0 || src == nullptr || dst == nullptr)
         return;
 
-    // ── Neural path (Phase 3): the trained GRU replaces the whole DSP chain ──
-    // (it was trained on the full pedal at Volume 0.5; the engine's Volume
-    // knob applies afterwards). No oversampling needed for the model itself.
+    // ── Neural path (Phase 3): the trained WaveNet replaces the whole DSP
+    // chain (it was trained on the full pedal at Volume 0.5; the engine's
+    // Volume knob applies afterwards). No oversampling needed for the model.
     if (neural != nullptr)
     {
-        const float cond[4] = { fuzzParam, toneParam, highParam,
+        // NOTE: the deployed ONNX models were trained on the pre-fix SPICE
+        // netlist, whose Tone pot read backwards (tone=1 -> dark). The DSP
+        // (ToneStack.cpp) and the corrected netlist now use tone=1 -> bright.
+        // Remap the Tone conditioning (cond[1] = 1 - tone) so the trained
+        // model reads the bright end as tone increases. Remove this remap if
+        // the models are ever retrained on the corrected netlist.
+        const float cond[4] = { fuzzParam, 1.0f - toneParam, highParam,
                                 hiLo ? 1.0f : 0.0f };
         neural->processBlock(src, dst, numSamples, cond);
 
-        // Volume + gentle limit (same as the tail of the DSP chain).
+        // Soft-limit -> presence shelf -> volume (the same output tail as the
+        // DSP path, so the two engines are like-for-like).
         for (int i = 0; i < numSamples; ++i)
         {
-            float x = dst[i] * volumeSmoothed.getNextValue();
+            float x = dst[i];
             x = static_cast<float>(circuit::kOutputSoftLimit)
                 * std::tanh(x / static_cast<float>(circuit::kOutputSoftLimit));
+            x = processPresenceNeural(x);
+            x *= volumeSmoothed.getNextValue();
             dst[i] = x;
         }
         return;
@@ -169,6 +210,7 @@ float FuzzEngine::processSampleInternal(float x) noexcept
     x *= static_cast<float>(circuit::kMakeupGain);
     x = static_cast<float>(circuit::kOutputSoftLimit)
         * std::tanh(x / static_cast<float>(circuit::kOutputSoftLimit));
+    x = processPresence(x);   // post-clip top-end presence lift
     x *= volumeSmoothed.getNextValue();
 
     return x;

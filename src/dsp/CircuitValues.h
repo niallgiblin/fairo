@@ -81,4 +81,13 @@ constexpr double kVolumeMax = 2.0;              // R26 100k VOL pot (unity at ~0
 // ── Oversampling ─────────────────────────────────────────────────────────────
 constexpr int kOversamplingFactor = 2;          // 2x, per PLAN.md Phase 4 (2x-4x)
 
+// ── Presence lift (post-clip brightness) ─────────────────────────────────────
+// Fairo's distortion generates fewer high harmonics than the real pedal /
+// reference capture, leaving the top darker (measured ~-7..-14 dB vs the
+// MAXED_SIL capture). The tonestack is flat above ~500 Hz, so this is fixed
+// with a gentle high-shelf after the soft-clip, not a tonestack change.
+// Tunable: raise/lower kPresenceShelfGainDb to taste.
+constexpr double kPresenceShelfFc = 3000.0;     // Hz — shelf corner
+constexpr double kPresenceShelfGainDb = 6.0;    // dB boost above the corner
+
 } // namespace fairo::circuit

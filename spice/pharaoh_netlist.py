@@ -73,11 +73,14 @@ def build_netlist(mode="silicon", fuzz=0.5, tone=0.5, high=1.0, vol=0.5,
 
     hilo_r = f"{39e3 * (1 - hilo) + 390e3 * hilo:g}"
 
-    # Pot splits: fuzz=1 -> wiper at lug3 (full signal); tone=1 -> wiper at A.
+    # Pot splits: fuzz=1 -> wiper at lug3 (full signal).
+    # Tone: t=1 -> wiper at node A (BRIGHT/full-range side), t=0 -> node B (dark).
+    # (FIX vs. origin: r25a/r25b were swapped, so tone=1 selected the dark node B
+    #  and the knob read backwards vs. the real Pharaoh. Matches ToneStack.cpp.)
     r24a = max(100e3 * (1 - fuzz), 1.0)
     r24b = max(100e3 * fuzz, 1.0)
-    r25a = 250e3 * tone
-    r25b = 250e3 * (1 - tone)
+    r25a = 250e3 * (1 - tone)
+    r25b = 250e3 * tone
     r8 = 25e3 * high
 
     if src == "sine":

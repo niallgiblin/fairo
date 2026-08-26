@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 # Fairo — Pharaoh-style fuzz pedal emulation (VST3/AU/Standalone).
 # Scaffold conventions (targets, options, JUCE version) inherited from the
 # author's fuzzyband project, per PLAN.md Phase 0.
-project(Fairo VERSION 0.1.0)
+project(Fairo VERSION 0.3.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

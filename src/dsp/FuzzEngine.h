@@ -82,6 +82,34 @@ private:
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> fuzzGainSmoothed;
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> volumeSmoothed;
 
+    // Post-clip presence high-shelf (RBJ 2nd-order) — brightens the top end.
+    // Two coefficient sets: one at the oversampled rate (DSP path) and one at
+    // the native rate (neural path), so both output stages are like-for-like.
+    static void computePresenceShelfCoeffs(double sampleRate,
+                                           double& b0, double& b1, double& b2,
+                                           double& a1, double& a2) noexcept;
+    void preparePresenceShelf(double sampleRate);
+    inline float processPresence(float x) noexcept   // DSP path (oversampled)
+    {
+        const double y = shelfB0 * x + shelfB1 * shelfX1 + shelfB2 * shelfX2
+                       - shelfA1 * shelfY1 - shelfA2 * shelfY2;
+        shelfX2 = shelfX1; shelfX1 = x;
+        shelfY2 = shelfY1; shelfY1 = static_cast<float>(y);
+        return static_cast<float>(y);
+    }
+    inline float processPresenceNeural(float x) noexcept  // neural path (native)
+    {
+        const double y = shelfNB0 * x + shelfNB1 * shelfNX1 + shelfNB2 * shelfNX2
+                       - shelfNA1 * shelfNY1 - shelfNA2 * shelfNY2;
+        shelfNX2 = shelfNX1; shelfNX1 = x;
+        shelfNY2 = shelfNY1; shelfNY1 = static_cast<float>(y);
+        return static_cast<float>(y);
+    }
+    double shelfB0 = 1.0, shelfB1 = 0.0, shelfB2 = 0.0, shelfA1 = 0.0, shelfA2 = 0.0;
+    float shelfX1 = 0.0f, shelfX2 = 0.0f, shelfY1 = 0.0f, shelfY2 = 0.0f;
+    double shelfNB0 = 1.0, shelfNB1 = 0.0, shelfNB2 = 0.0, shelfNA1 = 0.0, shelfNA2 = 0.0;
+    float shelfNX1 = 0.0f, shelfNX2 = 0.0f, shelfNY1 = 0.0f, shelfNY2 = 0.0f;
+
     juce::AudioBuffer<float> osBuffer;  // internal oversampled scratch (no audio-thread alloc)
 
     ClipMode clipMode = ClipMode::Silicon;
