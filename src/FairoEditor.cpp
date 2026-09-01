@@ -9,8 +9,112 @@ const juce::Colour kPanelInset(0xcc1c1612);
 const juce::Colour kKnobMetal(0xff3a332c);
 const juce::Colour kKnobTip(0xffc8a24a);
 const juce::Colour kLabelCol(0xffe8d8b8);
+const juce::Colour kLabelDim(0xccb7a583);
 const juce::Colour kAccent(0xffc8a24a);
+const juce::Colour kAccentHi(0xffedcf86);
 const juce::Colour kOutline(0x88c8a24a);
+} // namespace
+
+//==============================================================================
+//  Bundled OFL typefaces
+//  - Rajdhani  : wordmark, control labels, buttons (squared, legible, technical)
+//  - Space Mono: numeric readouts + fine print (stable tabular digits)
+//==============================================================================
+namespace FairoFonts
+{
+namespace
+{
+    juce::Typeface::Ptr load (const char* data, int size)
+    {
+        return juce::Typeface::createSystemTypefaceFor (data, (size_t) size);
+    }
+
+    struct Holder
+    {
+        juce::Typeface::Ptr display;
+        juce::Typeface::Ptr displayBold;
+        juce::Typeface::Ptr mono;
+        juce::Typeface::Ptr monoBold;
+
+        Holder()
+        {
+            display     = load (BinaryData::RajdhaniMedium_ttf,   BinaryData::RajdhaniMedium_ttfSize);
+            displayBold = load (BinaryData::RajdhaniBold_ttf,     BinaryData::RajdhaniBold_ttfSize);
+            mono        = load (BinaryData::SpaceMonoRegular_ttf, BinaryData::SpaceMonoRegular_ttfSize);
+            monoBold    = load (BinaryData::SpaceMonoBold_ttf,    BinaryData::SpaceMonoBold_ttfSize);
+        }
+
+        static Holder& get()
+        {
+            static Holder instance;
+            return instance;
+        }
+    };
+} // namespace
+
+static juce::Font display (float height, bool bold = false)
+{
+    return juce::Font (juce::FontOptions (bold ? Holder::get().displayBold : Holder::get().display)
+                           .withHeight (height));
+}
+
+static juce::Font mono (float height, bool bold = false)
+{
+    return juce::Font (juce::FontOptions (bold ? Holder::get().monoBold : Holder::get().mono)
+                           .withHeight (height));
+}
+} // namespace FairoFonts
+
+namespace
+{
+// Lay a single line of text out at the origin with uniform letter-spacing (tracking).
+juce::GlyphArrangement makeTrackedLayout (const juce::String& text, const juce::Font& font, float tracking)
+{
+    juce::GlyphArrangement ga;
+    ga.addLineOfText (font, text, 0.0f, 0.0f);
+
+    if (tracking > 0.0f)
+    {
+        const int n = ga.getNumGlyphs();
+        for (int i = 1; i < n; ++i)
+            ga.getGlyph (i).moveBy (tracking * (float) i, 0.0f);
+    }
+
+    return ga;
+}
+
+// Draw text with optional letter-spacing. Falls back to drawText() when untracked.
+void drawTrackedText (juce::Graphics& g, const juce::String& text, const juce::Rectangle<float>& area,
+                      juce::Justification justify, float tracking, const juce::Colour& colour,
+                      const juce::Font& font)
+{
+    if (tracking <= 0.0f || text.length() < 2)
+    {
+        g.setColour (colour);
+        g.setFont (font);
+        g.drawText (text, area, justify);
+        return;
+    }
+
+    auto ga = makeTrackedLayout (text, font, tracking);
+    ga.justifyGlyphs (0, ga.getNumGlyphs(), area.getX(), area.getY(), area.getWidth(), area.getHeight(), justify);
+
+    g.setColour (colour);
+    g.setFont (font);
+    ga.draw (g);
+}
+
+// Build the glyph outline path for a tracked string, positioned inside `area`.
+juce::Path makeTrackedPath (const juce::String& text, const juce::Font& font, float tracking,
+                            const juce::Rectangle<float>& area, juce::Justification justify)
+{
+    auto ga = makeTrackedLayout (text, font, tracking);
+    ga.justifyGlyphs (0, ga.getNumGlyphs(), area.getX(), area.getY(), area.getWidth(), area.getHeight(), justify);
+
+    juce::Path p;
+    ga.createPath (p);
+    return p;
+}
 } // namespace
 
 FairoLookAndFeel::FairoLookAndFeel()
@@ -65,7 +169,7 @@ void FairoLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int wid
 
 juce::Font FairoLookAndFeel::getComboBoxFont(juce::ComboBox&)
 {
-    return juce::FontOptions(13.0f);
+    return FairoFonts::display(14.0f);
 }
 
 void FairoLookAndFeel::drawComboBox(juce::Graphics& g, int width, int height, bool,
@@ -121,9 +225,12 @@ void FairoLookAndFeel::drawToggleButton(juce::Graphics& g, juce::ToggleButton& b
     g.fillRoundedRectangle(bounds, 4.0f);
     g.setColour(kOutline);
     g.drawRoundedRectangle(bounds, 4.0f, 1.0f);
-    g.setColour(button.getToggleState() ? kAccent : kLabelCol);
-    g.setFont(juce::FontOptions(13.0f));
-    g.drawText(button.getButtonText(), button.getLocalBounds(), juce::Justification::centred);
+
+    const juce::Font font = FairoFonts::display(14.0f);
+    const bool on = button.getToggleState();
+    drawTrackedText(g, button.getButtonText(), bounds,
+                    juce::Justification::centred, 0.8f,
+                    on ? kAccentHi : kLabelCol, font);
 }
 
 FairoEditor::FairoEditor(FairoProcessor& p)
@@ -215,45 +322,74 @@ void FairoEditor::paint(juce::Graphics& g)
     g.setColour(kOutline);
     g.drawRoundedRectangle(panel, 14.0f, 1.5f);
 
-    const auto title = juce::Rectangle<int>(0, 14, getWidth(), 34);
-    g.setFont(juce::FontOptions(26.0f, juce::Font::bold));
-    g.setColour(juce::Colour(0xaa000000));
-    g.drawText("F A I R O", title.translated(1, 1), juce::Justification::centred);
+    // ── Wordmark: tracked metal-sheen "FAIRO" over a soft shadow ──────────────
+    const juce::Rectangle<float> word(0.0f, 14.0f, (float) getWidth(), 40.0f);
+    const juce::Font titleFont = FairoFonts::display(29.0f, true);
+    const float titleTracking = 29.0f * 0.055f;
+
+    // soft drop shadow (two faint, offset passes read as a gentle blur)
+    g.setColour(juce::Colour(0x66000000));
+    g.fillPath(makeTrackedPath("FAIRO", titleFont, titleTracking, word.translated(0.0f, 2.0f),
+                               juce::Justification::centred));
+    g.setColour(juce::Colour(0x3d000000));
+    g.fillPath(makeTrackedPath("FAIRO", titleFont, titleTracking, word.translated(0.0f, 1.0f),
+                               juce::Justification::centred));
+
+    // brushed-gold vertical sheen for the fill
+    juce::ColourGradient sheen(juce::Colour(0xfff0d68e), word.getTopLeft(),
+                               juce::Colour(0xff9a7329), word.getBottomLeft(), false);
+    g.setGradientFill(sheen);
+    g.fillPath(makeTrackedPath("FAIRO", titleFont, titleTracking, word, juce::Justification::centred));
     g.setColour(kAccent);
-    g.drawText("F A I R O", title, juce::Justification::centred);
 
     // Version string (matches project(Fairo VERSION ...) in CMakeLists.txt).
     #ifndef FA_PLUGIN_VERSION
     #define FA_PLUGIN_VERSION "0.4.1"
     #endif
-    g.setColour(kLabelCol);
-    g.setFont(juce::FontOptions(11.0f));
-    g.drawText(juce::String("v") + juce::String(FA_PLUGIN_VERSION),
-               juce::Rectangle<int>(0, getHeight() - 28, getWidth(), 22),
-               juce::Justification::centred);
+    const juce::Rectangle<float> versionRect(0.0f, (float) getHeight() - 24.0f,
+                                             (float) getWidth(), 16.0f);
+    drawTrackedText(g, juce::String("v") + juce::String(FA_PLUGIN_VERSION),
+                    versionRect, juce::Justification::centred, 1.1f,
+                    kLabelDim, FairoFonts::mono(10.5f));
 
-    // Knob label + live numeric readout, so a knob at 1.0 is unmistakable.
+    // ── Knob label + live numeric readout ─────────────────────────────────────
     auto drawKnob = [&](const juce::Slider& s, const juce::String& name)
     {
-        const auto b = knobLabelBounds(s);
-        g.setColour(juce::Colour(0xaa000000));
-        g.setFont(juce::FontOptions(13.0f));
-        g.drawText(name, b.translated(1, 1), juce::Justification::centredTop);
-        g.setColour(kLabelCol);
-        g.drawText(name, b, juce::Justification::centredTop);
-        g.setColour(kAccent);
-        g.setFont(juce::FontOptions(11.0f));
-        g.drawText(juce::String((float) s.getValue(), 2), b, juce::Justification::centredBottom);
+        const auto b = knobLabelBounds(s).toFloat();
+        const float nameTracking = 1.2f;
+        const juce::Font nameFont = FairoFonts::display(12.5f);
+
+        drawTrackedText(g, name, b.translated(0.0f, 1.0f),
+                        juce::Justification::centredTop, nameTracking,
+                        juce::Colour(0xaa000000), nameFont);
+        drawTrackedText(g, name, b, juce::Justification::centredTop,
+                        nameTracking, kLabelCol, nameFont);
+
+        const juce::String value = juce::String((float) s.getValue(), 2);
+        drawTrackedText(g, value, b.translated(0.0f, -1.0f),
+                        juce::Justification::centredBottom, 0.0f,
+                        juce::Colour(0xaa000000), FairoFonts::mono(11.0f));
+        drawTrackedText(g, value, b, juce::Justification::centredBottom, 0.0f,
+                        kAccent, FairoFonts::mono(11.0f));
     };
     drawKnob(fuzzSlider, "Fuzz");
     drawKnob(toneSlider, "Tone");
     drawKnob(highSlider, "High");
     drawKnob(volumeSlider, "Volume");
 
-    g.setColour(kLabelCol);
-    g.setFont(juce::FontOptions(13.0f));
-    g.drawText("Hi/Lo", hiLoButton.getBounds().translated(0, -24), juce::Justification::centred);
-    g.drawText("Clip", clipModeBox.getBounds().translated(0, -24), juce::Justification::centred);
+    // ── Section labels above the switch row ───────────────────────────────────
+    auto drawSectionLabel = [&](const juce::Rectangle<int>& owner, const juce::String& text)
+    {
+        const auto b = owner.toFloat().translated(0.0f, -24.0f);
+        const juce::Font f = FairoFonts::display(12.5f);
+        drawTrackedText(g, text, b.translated(0.0f, 1.0f),
+                        juce::Justification::centred, 1.2f,
+                        juce::Colour(0xaa000000), f);
+        drawTrackedText(g, text, b, juce::Justification::centred,
+                        1.2f, kLabelCol, f);
+    };
+    drawSectionLabel(hiLoButton.getBounds(), "Hi/Lo");
+    drawSectionLabel(clipModeBox.getBounds(), "Clip");
 }
 
 juce::Rectangle<int> FairoEditor::knobLabelBounds(const juce::Slider& s) const

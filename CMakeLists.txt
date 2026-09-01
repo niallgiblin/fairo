@@ -100,11 +100,17 @@ juce_add_plugin(Fairo
 juce_generate_juce_header(Fairo)
 
 # ─────────────────────────────────────────────────────────────────
-# BinaryData — UI background (plugin). ONNX models stay test-only.
+# BinaryData — UI background + bundled OFL fonts (plugin).
+# ONNX models stay test-only.
 # ─────────────────────────────────────────────────────────────────
 
 juce_add_binary_data(FairoAssets
-    SOURCES "${CMAKE_SOURCE_DIR}/assets/coast.jpg"
+    SOURCES
+        "${CMAKE_SOURCE_DIR}/assets/coast.jpg"
+        "${CMAKE_SOURCE_DIR}/assets/fonts/Rajdhani-Medium.ttf"
+        "${CMAKE_SOURCE_DIR}/assets/fonts/Rajdhani-Bold.ttf"
+        "${CMAKE_SOURCE_DIR}/assets/fonts/SpaceMono-Regular.ttf"
+        "${CMAKE_SOURCE_DIR}/assets/fonts/SpaceMono-Bold.ttf"
 )
 
 # ─────────────────────────────────────────────────────────────────

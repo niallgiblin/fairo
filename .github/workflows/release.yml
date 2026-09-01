@@ -1,0 +1,220 @@
+# Release — build Fairo for all target platforms and attach the packages to a
+# GitHub Release. The fuzzyband download site (in the fuzzyband repo) reads Fairo's
+# Releases API, so this workflow is all that's needed to keep that page up to date.
+#
+# Fairo is DSP-only: the plugin never ships ONNX Runtime, so the packages below are
+# self-contained with no extra runtime, and the macOS build is a single universal pass
+# (one fat binary, no per-arch merge needed).
+#
+#   * Triggered by pushing a semver tag (v0.4.2), or manually via workflow_dispatch.
+#   * macOS job builds arm64 + x86_64 in one pass, ad-hoc signs, creates the Release.
+#   * Windows + Linux jobs run AFTER the macOS job created the release and upload.
+#
+# Artifacts:
+#   fairo-<ver>-macOS-Universal.zip   (VST3 + AU + Standalone)
+#   fairo-<ver>-Windows-x64.zip       (VST3 + Standalone)
+#   fairo-<ver>-Linux-x64.tar.gz      (VST3 + Standalone)
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v0.4.2). Required for manual runs.'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # macOS: universal (arm64 + x86_64) build, ad-hoc sign, create the release.
+  # ─────────────────────────────────────────────────────────────────────────────
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve release tag and version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
+          [ -n "$TAG" ] || { echo "No release tag provided."; exit 1; }
+          echo "RELEASE_TAG=$TAG" >> "$GITHUB_ENV"
+          echo "VERSION=${TAG#v}"  >> "$GITHUB_ENV"
+
+      - name: Configure + build (universal)
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
+            -DFA_BUILD_STANDALONE=ON \
+            -DFA_BUILD_TESTS=OFF
+          cmake --build build --config Release --parallel
+
+      - name: Verify universal binaries
+        run: |
+          for b in \
+            "build/Fairo_artefacts/Release/VST3/Fairo.vst3/Contents/MacOS/Fairo" \
+            "build/Fairo_artefacts/Release/AU/Fairo.component/Contents/MacOS/Fairo" \
+            "build/Fairo_artefacts/Release/Standalone/Fairo.app/Contents/MacOS/Fairo"; do
+            echo "== $b"; file "$b" | sed 's/.*: *//'
+          done
+
+      - name: Ad-hoc sign bundles (Gatekeeper-friendly, unsigned distribution)
+        run: |
+          ART="build/Fairo_artefacts/Release"
+          for b in "$ART/VST3/Fairo.vst3" "$ART/AU/Fairo.component" "$ART/Standalone/Fairo.app"; do
+            xattr -cr "$b" 2>/dev/null || true
+            codesign --force --deep --sign - --timestamp=none "$b"
+          done
+
+      - name: Build macOS zip
+        run: |
+          mkdir -p "dist/install/Fairo"
+          ditto "build/Fairo_artefacts/Release/VST3/Fairo.vst3"        "dist/install/Fairo/Fairo.vst3"
+          ditto "build/Fairo_artefacts/Release/AU/Fairo.component"     "dist/install/Fairo/Fairo.component"
+          ditto "build/Fairo_artefacts/Release/Standalone/Fairo.app"   "dist/install/Fairo/Fairo.app"
+          ditto -c -k --keepParent "dist/install/Fairo" \
+            "dist/fairo-${VERSION}-macOS-Universal.zip"
+          ls -lh "dist/fairo-${VERSION}-macOS-Universal.zip"
+
+      - name: Create release + upload macOS asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Creating/updating release: ${RELEASE_TAG}"
+          BODY_FILE="$(mktemp)"
+          {
+            echo "## Fairo v${VERSION}"
+            echo
+            echo "Self-contained packages for macOS, Windows and Linux. Unsigned macOS builds:"
+            echo "right-click Open (or \`xattr -dr com.apple.quarantine\`)."
+            echo
+            echo "- macOS Universal: VST3 + AU + Standalone"
+            echo "- Windows x64: VST3 + Standalone"
+            echo "- Linux x64: VST3 + Standalone"
+          } > "$BODY_FILE"
+          if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "Fairo ${VERSION}" \
+              --notes-file "$BODY_FILE"
+          fi
+          gh release upload "$RELEASE_TAG" \
+            "dist/fairo-${VERSION}-macOS-Universal.zip" \
+            --repo "$GITHUB_REPOSITORY" --clobber
+          echo "macOS asset uploaded to ${RELEASE_TAG}"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Windows x64
+  # ─────────────────────────────────────────────────────────────────────────────
+  windows:
+    runs-on: windows-latest
+    needs: macos
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve release tag and version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") { $TAG = "${{ inputs.tag }}" }
+          else { $TAG = "${{ github.ref_name }}" }
+          if ([string]::IsNullOrEmpty($TAG)) { throw "No release tag provided." }
+          "RELEASE_TAG=$TAG"         | Out-File -FilePath $env:GITHUB_ENV -Append
+          "VERSION=$($TAG.TrimStart('v'))" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Configure + build
+        shell: pwsh
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release `
+            -DFA_BUILD_STANDALONE=ON -DFA_BUILD_TESTS=OFF
+          cmake --build build --config Release --parallel
+
+      - name: Stage Windows packages
+        shell: pwsh
+        run: |
+          $paths = @()
+          $vst = "Fairo_artefacts/Release/VST3/Fairo.vst3"
+          if (Test-Path $vst) { $paths += $vst }
+          $standalone = "Fairo_artefacts/Release/Standalone"
+          if (Test-Path $standalone) { $paths += $standalone }
+          if ($paths.Count -eq 0) { throw "No plugin output found." }
+          $out = "dist\fairo-$env:VERSION-Windows-x64.zip"
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path $paths -DestinationPath $out -Force
+          Write-Host "Packaged: $out"
+
+      - name: Upload Windows asset
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$env:RELEASE_TAG" `
+            "dist\fairo-$env:VERSION-Windows-x64.zip" `
+            --repo "$env:GITHUB_REPOSITORY" --clobber
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Linux x64
+  # ─────────────────────────────────────────────────────────────────────────────
+  linux:
+    runs-on: ubuntu-latest
+    needs: macos
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve release tag and version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
+          [ -n "$TAG" ] || { echo "No release tag provided."; exit 1; }
+          echo "RELEASE_TAG=$TAG" >> "$GITHUB_ENV"
+          echo "VERSION=${TAG#v}"  >> "$GITHUB_ENV"
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev libx11-dev libxext-dev libfreetype-dev \
+            libxkbcommon-dev libgl1-mesa-dev libfontconfig1-dev
+
+      - name: Configure + build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release \
+            -DFA_BUILD_STANDALONE=ON \
+            -DFA_BUILD_TESTS=OFF \
+            -DCMAKE_BUILD_RPATH_USE_ORIGIN=ON \
+            -DCMAKE_INSTALL_RPATH='$ORIGIN'
+          cmake --build build --config Release --parallel
+
+      - name: Stage Linux packages
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          VST_ROOT="Fairo_artefacts/Release/VST3/Fairo.vst3"
+          STANDALONE="Fairo_artefacts/Release/Standalone"
+          TAR_PATHS=("$VST_ROOT")
+          [ -d "$STANDALONE" ] && TAR_PATHS+=("$STANDALONE")
+          tar -czf "dist/fairo-${VERSION}-Linux-x64.tar.gz" "${TAR_PATHS[@]}"
+          ls -lh "dist/fairo-${VERSION}-Linux-x64.tar.gz"
+
+      - name: Upload Linux asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$RELEASE_TAG" \
+            "dist/fairo-${VERSION}-Linux-x64.tar.gz" \
+            --repo "$GITHUB_REPOSITORY" --clobber
