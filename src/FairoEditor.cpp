@@ -264,7 +264,7 @@ juce::Rectangle<int> FairoEditor::knobLabelBounds(const juce::Slider& s) const
 void FairoEditor::resized()
 {
     const int margin = 24;
-    const int top = 58;
+    const int top = 82;
     const int knobSize = 88;
 
     fuzzSlider.setBounds(margin, top, knobSize, knobSize);
@@ -272,6 +272,12 @@ void FairoEditor::resized()
     toneSlider.setBounds(getWidth() / 2 - knobSize - 10, top, knobSize, knobSize);
     highSlider.setBounds(getWidth() / 2 + 10, top, knobSize, knobSize);
 
-    hiLoButton.setBounds(24, top + knobSize + 66, 64, 26);
-    clipModeBox.setBounds(104, top + knobSize + 66, 120, 26);
+    const int hiLoW = 64;
+    const int clipW = 120;
+    const int rowGap = 16;
+    const int groupW = hiLoW + rowGap + clipW;
+    const int groupX = (getWidth() - groupW) / 2;
+    const int rowY = top + knobSize + 108;
+    hiLoButton.setBounds(groupX, rowY, hiLoW, 26);
+    clipModeBox.setBounds(groupX + hiLoW + rowGap, rowY, clipW, 26);
 }
