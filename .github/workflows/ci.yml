@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Parked Phase 3 inference tests only — the plugin binary is DSP-only.
       - name: Download ONNX Runtime
         run: |
           ARCH=$(uname -m)

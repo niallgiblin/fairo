@@ -54,7 +54,11 @@ def export(mode):
 
         def forward(self, x, cond):
             y, _ = self.inner.forward_seq(x, cond)
-            return y[:, -T:]     # keep only the target region
+            # Full-length causal output (NOT frozen to 512): the host feeds
+            # [context + block] and takes the last `block` samples, so any DAW
+            # block size works. The old export sliced y[:, -512:], which only
+            # ever ran at a 512-sample block and otherwise fell back to dry.
+            return y
 
     model = Causal(net)
     torch.onnx.export(

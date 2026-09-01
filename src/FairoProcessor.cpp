@@ -54,12 +54,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout FairoProcessor::createParame
         juce::StringArray{ kClipModeSilicon, kClipModeGermanium, kClipModeBypass },
         0));
 
-    layout.add(std::make_unique<juce::AudioParameterChoice>(
-        juce::ParameterID{ "engine", 1 },
-        "Engine",
-        juce::StringArray{ "DSP", "Neural" },
-        0));  // Neural falls back to DSP when models are unavailable
-
     return layout;
 }
 
@@ -79,17 +73,6 @@ void FairoProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     const double sr = (sampleRate > 0.0) ? sampleRate : 44100.0;
     engine.prepare(sr, samplesPerBlock);
-
-#if defined(FA_ENABLE_ONNX)
-    // Phase 3: load the three branch models once (embedded via BinaryData).
-    neuralModelsLoaded =
-        neuralSi.loadModel(fairo::FuzzNeuralInference::Branch::Silicon,
-                           BinaryData::fuzz_silicon_onnx, BinaryData::fuzz_silicon_onnxSize)
-        && neuralGe.loadModel(fairo::FuzzNeuralInference::Branch::Germanium,
-                              BinaryData::fuzz_germanium_onnx, BinaryData::fuzz_germanium_onnxSize)
-        && neuralBy.loadModel(fairo::FuzzNeuralInference::Branch::Bypass,
-                              BinaryData::fuzz_bypass_onnx, BinaryData::fuzz_bypass_onnxSize);
-#endif
 
     prepared = true;
     pushParametersToEngine();
@@ -159,23 +142,6 @@ void FairoProcessor::pushParametersToEngine()
     engine.setClipMode(clip == 0 ? fairo::FuzzEngine::ClipMode::Silicon
                        : clip == 1 ? fairo::FuzzEngine::ClipMode::Germanium
                                    : fairo::FuzzEngine::ClipMode::Bypass);
-
-    // Phase 3 engine swap: Neural uses the trained GRU for the current branch;
-    // falls back to DSP when the models are unavailable (still DSP-verified).
-#if defined(FA_ENABLE_ONNX)
-    const bool wantNeural = static_cast<int>(apvts.getRawParameterValue("engine")->load()) > 0
-                            && neuralModelsLoaded;
-    fairo::FuzzNeuralInference* active = nullptr;
-    if (wantNeural)
-    {
-        active = (clip == 0) ? &neuralSi
-               : (clip == 1) ? &neuralGe
-                             : &neuralBy;
-    }
-    engine.setNeuralInference(active);
-#else
-    engine.setNeuralInference(nullptr);
-#endif
 }
 
 juce::AudioProcessorEditor* FairoProcessor::createEditor()

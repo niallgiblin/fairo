@@ -71,8 +71,8 @@ void FuzzNeuralInference::processBlock(const float* in, float* out, int numSampl
         const int needed = kContextSamples + numSamples;
         if (static_cast<int>(histBuf_.size()) < needed)
             histBuf_.resize(static_cast<size_t>(needed));
-        if (static_cast<int>(yBuf_.size()) < numSamples)
-            yBuf_.resize(static_cast<size_t>(numSamples));
+        if (static_cast<int>(yBuf_.size()) < needed)
+            yBuf_.resize(static_cast<size_t>(needed));
 
         // Slide the history window: keep the last kContextSamples, append the
         // new block (the model's causal context spans call boundaries).
@@ -83,7 +83,7 @@ void FuzzNeuralInference::processBlock(const float* in, float* out, int numSampl
 
         const std::array<int64_t, 2> xShape{ 1, static_cast<int64_t>(tail + numSamples) };
         const std::array<int64_t, 2> cShape{ 1, 4 };
-        const std::array<int64_t, 2> yShape{ 1, numSamples };
+        const std::array<int64_t, 2> yShape{ 1, static_cast<int64_t>(tail + numSamples) };
 
         Ort::Value inTensors[] = {
             Ort::Value::CreateTensor<float>(memInfo_, histBuf_.data(),
@@ -94,14 +94,17 @@ void FuzzNeuralInference::processBlock(const float* in, float* out, int numSampl
         };
         Ort::Value outTensors[] = {
             Ort::Value::CreateTensor<float>(memInfo_, yBuf_.data(),
-                                            static_cast<size_t>(numSamples),
+                                            static_cast<size_t>(tail + numSamples),
                                             yShape.data(), yShape.size()),
         };
 
         session_->Run(Ort::RunOptions{ nullptr }, inputNames_.data(), inTensors, 2,
                       outputNames_.data(), outTensors, 1);
 
-        std::memcpy(out, yBuf_.data(), static_cast<size_t>(numSamples) * sizeof(float));
+        // The model is causal and returns [context + block]; keep the current
+        // block (the last numSamples) as this call's output.
+        std::memcpy(out, yBuf_.data() + tail,
+                    static_cast<size_t>(numSamples) * sizeof(float));
     }
     catch (const Ort::Exception&)
     {

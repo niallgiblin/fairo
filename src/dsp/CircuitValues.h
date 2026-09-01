@@ -90,4 +90,11 @@ constexpr int kOversamplingFactor = 2;          // 2x, per PLAN.md Phase 4 (2x-4
 constexpr double kPresenceShelfFc = 3000.0;     // Hz — shelf corner
 constexpr double kPresenceShelfGainDb = 6.0;    // dB boost above the corner
 
+// ── Parked Phase 3 neural "body/fat" enhancer (not used by the plugin) ──────
+// Measured when the WaveNet path was still wired: DSP sustains/compresses
+// (RMS-peak gap ~2.8 dB, bass-heavy); WaveNet stayed peaky/thin (gap ~14 dB)
+// because its ~23 ms receptive field under-captures long-term compression.
+// Restore as post-model makeup if inference is rewired:
+//   kNeuralBodyFc = 160 Hz, kNeuralBodyBoostDb = 4.5 dB, kNeuralSatDrive = 1.8
+
 } // namespace fairo::circuit

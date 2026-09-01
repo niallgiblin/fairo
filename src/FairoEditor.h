@@ -3,13 +3,17 @@
 /**
  * @file
  * @brief Plugin editor: Fuzz/Volume/Tone/High rotaries + Hi/Lo and Clip-mode
- *        switches, in a dark pedal-style skin (PLAN.md Phase 4).
+ *        switch, over a gloomy amber coastal background (PLAN.md Phase 4).
  */
 
 #include <JuceHeader.h>
 
 class FairoProcessor;
 
+/**
+ * @brief Dark amber / desert-gold theme — semi-transparent controls over
+ *        the background image, matching fuzzyband's frosted-panel pattern.
+ */
 class FairoLookAndFeel final : public juce::LookAndFeel_V4
 {
 public:
@@ -19,6 +23,21 @@ public:
     void drawRotarySlider(juce::Graphics&, int x, int y, int width, int height,
                           float sliderPosProportional, float rotaryStartAngle,
                           float rotaryEndAngle, juce::Slider&) override;
+
+    void drawComboBox(juce::Graphics&, int width, int height, bool isButtonDown,
+                      int buttonX, int buttonY, int buttonW, int buttonH,
+                      juce::ComboBox&) override;
+    void positionComboBoxText(juce::ComboBox&, juce::Label&) override;
+    juce::Font getComboBoxFont(juce::ComboBox&) override;
+
+    void drawButtonBackground(juce::Graphics&, juce::Button&,
+                              const juce::Colour& backgroundColour,
+                              bool shouldDrawButtonAsHighlighted,
+                              bool shouldDrawButtonAsDown) override;
+
+    void drawToggleButton(juce::Graphics&, juce::ToggleButton&,
+                          bool shouldDrawButtonAsHighlighted,
+                          bool shouldDrawButtonAsDown) override;
 };
 
 class FairoEditor final : public juce::AudioProcessorEditor,
@@ -26,7 +45,7 @@ class FairoEditor final : public juce::AudioProcessorEditor,
 {
 public:
     explicit FairoEditor(FairoProcessor&);
-    ~FairoEditor() override = default;
+    ~FairoEditor() override;
 
     void paint(juce::Graphics&) override;
     void resized() override;
@@ -43,15 +62,14 @@ private:
     juce::Slider fuzzSlider, volumeSlider, toneSlider, highSlider;
     juce::ToggleButton hiLoButton;
     juce::ComboBox clipModeBox;
-    juce::ComboBox engineBox;
 
     FairoLookAndFeel lookAndFeel;
+    juce::Image backgroundImage;
 
     juce::AudioProcessorValueTreeState::SliderAttachment fuzzAttachment,
         volumeAttachment, toneAttachment, highAttachment;
     juce::AudioProcessorValueTreeState::ButtonAttachment hiLoAttachment;
     juce::AudioProcessorValueTreeState::ComboBoxAttachment clipAttachment;
-    juce::AudioProcessorValueTreeState::ComboBoxAttachment engineAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FairoEditor)
 };

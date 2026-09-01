@@ -13,11 +13,6 @@
 #include <JuceHeader.h>
 
 #include "dsp/FuzzEngine.h"
-#include "inference/FuzzNeuralInference.h"
-
-#if defined(FA_ENABLE_ONNX)
-#include "BinaryData.h"
-#endif
 
 class FairoProcessor final : public juce::AudioProcessor
 {
@@ -63,11 +58,6 @@ private:
 
     juce::AudioProcessorValueTreeState apvts;
     fairo::FuzzEngine engine;
-
-#if defined(FA_ENABLE_ONNX)
-    fairo::FuzzNeuralInference neuralSi, neuralGe, neuralBy;
-    bool neuralModelsLoaded = false;
-#endif
 
     bool prepared = false;
 

@@ -11,6 +11,9 @@
  *   h    float32 [L, 1, H] stacked per-layer state  (L=2, H=24)
  *   -> y float32 [1, T], h_out float32 [L, 1, H]
  *
+ * Parked: the plugin is DSP-only. This module is compiled only into
+ * NeuralTests when FA_ENABLE_ONNX is on.
+ *
  * The session runs on the audio thread per block, carrying h across calls
  * (the statefulness is what models envelope/sustain dynamics — PLAN.md
  * Section 2 pitfall #2). All Ort::Value tensors wrap preallocated buffers so

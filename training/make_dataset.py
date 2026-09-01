@@ -36,8 +36,8 @@ from pharaoh_netlist import build_netlist  # noqa: E402
 from spice_runner import parse_raw  # noqa: E402
 
 SR = 44100
-CLIP_LEN = 12.0          # seconds of training audio per clip
-PREROLL = 2.5            # seconds simulated before the clip (settling)
+CLIP_LEN = float(os.environ.get("FAIRO_CLIP_LEN", "12.0"))    # seconds of training audio per clip
+PREROLL = float(os.environ.get("FAIRO_PREROLL", "2.5"))        # seconds simulated before the clip (settling)
 DI_DIRS = [
     os.path.expanduser("~/Desktop/fuzzyband/data/raw/single_note"),
     os.path.expanduser("~/Desktop/fuzzyband/data/raw/open_chord"),
