@@ -242,7 +242,6 @@ FairoEditor::FairoEditor(FairoProcessor& p)
     , toneAttachment(processor.getApvts(), "tone", toneSlider)
     , highAttachment(processor.getApvts(), "high", highSlider)
     , hiLoAttachment(processor.getApvts(), "hiLo", hiLoButton)
-    , clipAttachment(processor.getApvts(), "clipMode", clipModeBox)
 {
     setLookAndFeel(&lookAndFeel);
     setWantsKeyboardFocus(false);
@@ -259,22 +258,28 @@ FairoEditor::FairoEditor(FairoProcessor& p)
         addAndMakeVisible(slider);
     }
 
-    // Reflect the persisted Hi/Lo state (do NOT force it back to Lo on open).
+    // ButtonAttachment already applied the persisted Hi/Lo value. Only sync the
+    // label — calling setToggleState here fights the attachment and makes the
+    // first click a no-op.
     hiLoButton.setClickingTogglesState(true);
-    const bool isHi = processor.getApvts().getRawParameterValue("hiLo")->load() > 0.5f;
-    hiLoButton.setToggleState(isHi, juce::dontSendNotification);
-    hiLoButton.setButtonText(isHi ? "Hi" : "Lo");
-    hiLoButton.onClick = [this]
+    hiLoButton.onStateChange = [this]
     {
         hiLoButton.setButtonText(hiLoButton.getToggleState() ? "Hi" : "Lo");
     };
+    hiLoButton.onStateChange();
     addAndMakeVisible(hiLoButton);
 
+    // Add the items FIRST, then bind the attachment. Attaching to an empty
+    // ComboBox makes attachParameter()'s initial sync a no-op, so the combo
+    // would otherwise open on its hard-coded selection (the old bug: "Clip
+    // reverts to Silicon on reopen"). With items present, the attachment reads
+    // the saved clipMode value and restores it.
     clipModeBox.addItem("Silicon", 1);
     clipModeBox.addItem("Germanium", 2);
     clipModeBox.addItem("Bypass", 3);
-    clipModeBox.setSelectedId(1, juce::dontSendNotification);
     addAndMakeVisible(clipModeBox);
+    clipAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        processor.getApvts(), "clipMode", clipModeBox);
 
     setSize(520, 360);
 }
@@ -344,7 +349,7 @@ void FairoEditor::paint(juce::Graphics& g)
 
     // Version string (matches project(Fairo VERSION ...) in CMakeLists.txt).
     #ifndef FA_PLUGIN_VERSION
-    #define FA_PLUGIN_VERSION "0.4.1"
+    #define FA_PLUGIN_VERSION "0.4.5"
     #endif
     const juce::Rectangle<float> versionRect(0.0f, (float) getHeight() - 24.0f,
                                              (float) getWidth(), 16.0f);

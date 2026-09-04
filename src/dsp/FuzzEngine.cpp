@@ -36,6 +36,7 @@ inline float bypassSaturate(float x, float vSat) noexcept
 void FuzzEngine::prepare(double sampleRate, int maxBlockSize)
 {
     const int maxOs = std::max(2, maxBlockSize * circuit::kOversamplingFactor);
+    osSampleRate_ = sampleRate * circuit::kOversamplingFactor;
 
     // Linear network topology (values in CircuitValues.h; see comments there).
     {
@@ -44,7 +45,11 @@ void FuzzEngine::prepare(double sampleRate, int maxBlockSize)
 
         // Input stage (real): Hi/Lo series R (39k/390k) -> C1 10uF -> Q4
         // base-load (fitted so the two positions differ by ~15 dB, thesis 3.2.1).
-        inputNetwork.setTopology(circuit::kInputResistanceLo, {
+        // Honour hiLo if the host restored it before prepareToPlay — setTopology
+        // would otherwise pin the network at Lo while the flag stays Hi, and the
+        // next setHiLo(true) is a no-op.
+        inputNetwork.setTopology(hiLo ? circuit::kInputResistanceHi
+                                      : circuit::kInputResistanceLo, {
             B{ T::Capacitor, 0, 1, circuit::kInputDecouplingCap },
             B{ T::Resistor, 1, -1, circuit::kInputStageLoadR },
         }, 1);
@@ -84,17 +89,33 @@ void FuzzEngine::prepare(double sampleRate, int maxBlockSize)
 
 void FuzzEngine::preparePresenceShelf(double sampleRate)
 {
-    computePresenceShelfCoeffs(sampleRate, shelfB0, shelfB1, shelfB2, shelfA1, shelfA2);
+    computePresenceShelfCoeffs(sampleRate, presenceGainDb(),
+                               shelfB0, shelfB1, shelfB2, shelfA1, shelfA2);
 }
 
-void FuzzEngine::computePresenceShelfCoeffs(double sampleRate,
+double FuzzEngine::presenceGainDb() const noexcept
+{
+    // Per-clip top-end voice. Grounded in the AAU thesis:
+    //   Silicon   — the "harsher"/brighter clipper (3.4.2) → most top lift.
+    //   Germanium — the "warmer, rounded" clipper (3.4.1) → modest, keep it warm.
+    //   Bypass    — open/hairy, but a light top cut stops it reading as fizzy.
+    switch (clipMode)
+    {
+        case ClipMode::Silicon:   return circuit::kPresenceShelfGainDbSilicon;
+        case ClipMode::Germanium: return circuit::kPresenceShelfGainDbGermanium;
+        case ClipMode::Bypass:    return circuit::kPresenceShelfGainDbBypass;
+    }
+    return circuit::kPresenceShelfGainDbSilicon;
+}
+
+void FuzzEngine::computePresenceShelfCoeffs(double sampleRate, double gainDb,
                                             double& b0, double& b1, double& b2,
                                             double& a1, double& a2) noexcept
 {
     // RBJ audio-EQ-cookbook 2nd-order high-shelf. Boosts above kPresenceShelfFc
-    // by kPresenceShelfGainDb to restore top-end that the distortion's harmonic
-    // content under-produces vs. the reference capture.
-    const double A  = std::pow(10.0, circuit::kPresenceShelfGainDb / 40.0);
+    // by `gainDb` (clip-mode-dependent) to restore the top-end character the
+    // clipping cascade under/over-produces vs. the reference capture.
+    const double A  = std::pow(10.0, std::max(gainDb, -24.0) / 40.0);
     const double w0 = 2.0 * juce::MathConstants<double>::pi * circuit::kPresenceShelfFc / sampleRate;
     const double cs = std::cos(w0), sn = std::sin(w0);
     const double alpha = (sn / 2.0) * std::sqrt(2.0);            // shelf slope S = 1
@@ -236,6 +257,11 @@ void FuzzEngine::applyClipMode() noexcept
             clip2.setConfig(DiodeClipConfig::bypass());
             break;
     }
+
+    // Re-voice the post-clip presence shelf for the new clip mode. Uses the
+    // stored oversampled rate (already prepared); a no-op before prepare().
+    if (osSampleRate_ > 0.0)
+        preparePresenceShelf(osSampleRate_);
 }
 
 } // namespace fairo

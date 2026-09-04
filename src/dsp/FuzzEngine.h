@@ -77,9 +77,16 @@ private:
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> volumeSmoothed;
 
     // Post-clip presence high-shelf (RBJ 2nd-order) — brightens the top end.
-    static void computePresenceShelfCoeffs(double sampleRate,
+    // The shelf gain is clip-mode-dependent: the AAU thesis characterises
+    // Silicon as the "harsher"/brighter clipper (3.4.2) and Germanium as the
+    // "warmer, rounded" one (3.4.1); Bypass is the open/hairy mode and needs
+    // the least top lift so it doesn't read as fizzy. This is what makes the
+    // three clip modes voice differently instead of sharing one flat tone.
+    static void computePresenceShelfCoeffs(double sampleRate, double gainDb,
                                            double& b0, double& b1, double& b2,
                                            double& a1, double& a2) noexcept;
+    /** Presence-shelf gain (dB) for the current clip mode. */
+    double presenceGainDb() const noexcept;
     void preparePresenceShelf(double sampleRate);
     inline float processPresence(float x) noexcept
     {
@@ -97,6 +104,7 @@ private:
     ClipMode clipMode = ClipMode::Silicon;
     bool hiLo = false;                  // false = Lo
     bool prepared = false;
+    double osSampleRate_ = 0.0;         // oversampled rate, for clip-aware shelf recompute
 };
 
 } // namespace fairo

@@ -8,7 +8,7 @@
  *  - RcNetwork: analytic first-order RC validation, DC blocking.
  *  - ToneStack: stability, DC blocking, boundedness.
  *  - FuzzEngine: end-to-end chain, silence-in/silence-out, mid-stream
- *    clip-mode switching without NaN/instability.
+ *    clip-mode switching without NaN/instability, Hi/Lo surviving prepare().
  */
 
 #include <catch2/catch_test_macros.hpp>
@@ -304,6 +304,46 @@ TEST_CASE("FuzzEngine: switching clip mode mid-stream never produces NaN", "[dsp
     }
     for (float e : energy)
         CHECK(e > 0.0f);
+}
+
+TEST_CASE("FuzzEngine: Hi/Lo set before prepare() still engages Hi", "[dsp][engine][hilo]")
+{
+    // Stay well below clipping so the ~15 dB Hi/Lo pad is visible as level.
+    const auto in = makeSine(48000.0, 220.0, 0.02, 1);
+
+    auto peakAfterSettle = [&](FuzzEngine& e)
+    {
+        std::vector<float> out(in.size());
+        for (size_t i = 0; i < in.size(); i += 256)
+        {
+            const int n = static_cast<int>(std::min<size_t>(256, in.size() - i));
+            e.processBlock(in.data() + i, out.data() + i, n);
+        }
+        return peakAbs(out, static_cast<int>(in.size() / 2));
+    };
+
+    FuzzEngine lo;
+    lo.prepare(48000.0, 256);
+    lo.setHiLo(false);
+    const float loPeak = peakAfterSettle(lo);
+
+    FuzzEngine hiAfterPrepare;
+    hiAfterPrepare.prepare(48000.0, 256);
+    hiAfterPrepare.setHiLo(true);
+    const float hiPeak = peakAfterSettle(hiAfterPrepare);
+
+    REQUIRE(hiPeak > loPeak * 2.0f);
+
+    // Host restore writes Hi, then the graph starts — prepare must not drop
+    // the network back to Lo while leaving the flag set.
+    FuzzEngine restored;
+    restored.setHiLo(true);
+    restored.prepare(48000.0, 256);
+    restored.setHiLo(true);
+    const float restoredPeak = peakAfterSettle(restored);
+
+    CHECK(restored.getHiLo());
+    CHECK(restoredPeak == Approx(hiPeak).margin(hiPeak * 0.15f));
 }
 
 // ── Cross-validation against the Python sandbox (python/diode_clipper.py) ────

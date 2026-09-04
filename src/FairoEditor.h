@@ -69,7 +69,9 @@ private:
     juce::AudioProcessorValueTreeState::SliderAttachment fuzzAttachment,
         volumeAttachment, toneAttachment, highAttachment;
     juce::AudioProcessorValueTreeState::ButtonAttachment hiLoAttachment;
-    juce::AudioProcessorValueTreeState::ComboBoxAttachment clipAttachment;
+    // Created in the ctor body AFTER the combo items exist (see FairoEditor.cpp),
+    // so attachParameter() can sync the initial selection from the saved state.
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> clipAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FairoEditor)
 };

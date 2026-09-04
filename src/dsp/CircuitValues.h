@@ -45,8 +45,12 @@ constexpr double kClip1SeriesR = 100.0e3;       // ohm — R21 collector load
 // Q4 amplification per thesis 3.2; the Fuzz pot (R24 DIST, 100k) is a
 // signal-strength control between Q4 and clip stage 1 ("in- or decrease the
 // signal strength within an interval" — thesis 3.2.2). Mapped to gain.
-constexpr double kGainStage1Min = 1.0;
-constexpr double kGainStage1Max = 12.0;         // MODEL: tunable, Phase 1 validation
+constexpr double kGainStage1Min = 1.5;
+constexpr double kGainStage1Max = 18.0;         // MODEL: tunable, Phase 1 validation
+// Raised from 1.0/12.0: at the reference DI level the signal fell *below* the
+// clipping knee at mid Fuzz, so the clippers never engaged and the Hi/Lo input
+// shift (~15 dB) passed straight through un-compressed. More drive saturates
+// the stages (thesis §2 pitfall #2: "more gain, more punch, longer sustain").
 
 // ── Interstage coupling (clip 1 -> stage 2) ──────────────────────────────────
 constexpr double kInterstageCouplingCap = 47.0e-9;  // F — 0.047 uF (trace value)
@@ -54,10 +58,13 @@ constexpr double kInterstageBiasLeak = 470.0e3;     // ohm — Q2 bias R15 470k
 
 // ── Clip stage 2 branches (research E) ───────────────────────────────────────
 constexpr double kClip2SeriesR = 100.0e3;       // ohm — R10 collector load
-constexpr double kGainStage2 = 10.0;            // Q2 CE: -R10/R11 = -100k/10k (MODEL)
+constexpr double kGainStage2 = 16.0;            // Q2 CE: -R10/R11 = -100k/10k (MODEL)
+// Raised from 10.0 so the second clipping stage engages on typical DIs instead
+// of passing the input shift through un-clipped; this is what compresses the
+// Hi/Lo output spread (reference: ~3-9 dB, not ~15 dB) and adds sustain/punch.
 // Bypass branch: hard transistor-only clipping (thesis: "very hard and
 // sudden"). Saturation knee ~ rail-limited collector swing.
-constexpr double kBypassSaturationVoltage = 3.0;
+constexpr double kBypassSaturationVoltage = 2.5;
 
 // ── Tone / High stack (research F — the real network) ───────────────────────
 // Q2 coll -> C9 0.01uF -> node A -> R5 470k -> GND            (fixed HP, ~34 Hz)
@@ -72,8 +79,11 @@ constexpr double kToneOutCap = 47.0e-9;         // F  — C3 to Q1 base
 constexpr double kToneOutLeak = 470.0e3;        // ohm — Q1 bias R7 470k
 
 // ── Output stage (research I) ───────────────────────────────────────────────
-constexpr double kMakeupGain = 4.0;             // Q1 CE (100k/2.2k, bias-point MODEL)
-constexpr double kOutputSoftLimit = 2.0;        // V — gentle output saturation
+constexpr double kMakeupGain = 3.2;             // Q1 CE (100k/2.2k, bias-point MODEL)
+// Lowered slightly (was 4.0): the clip stages now saturate harder, so the
+// pre-limit signal is hotter — less post makeup keeps the output from bricking
+// at the soft limit and keeps the stage-2 level gap honest.
+constexpr double kOutputSoftLimit = 1.8;        // V — gentle output saturation
 
 // ── Master ───────────────────────────────────────────────────────────────────
 constexpr double kVolumeMax = 2.0;              // R26 100k VOL pot (unity at ~0.5)
@@ -81,14 +91,20 @@ constexpr double kVolumeMax = 2.0;              // R26 100k VOL pot (unity at ~0
 // ── Oversampling ─────────────────────────────────────────────────────────────
 constexpr int kOversamplingFactor = 2;          // 2x, per PLAN.md Phase 4 (2x-4x)
 
-// ── Presence lift (post-clip brightness) ─────────────────────────────────────
-// Fairo's distortion generates fewer high harmonics than the real pedal /
-// reference capture, leaving the top darker (measured ~-7..-14 dB vs the
-// MAXED_SIL capture). The tonestack is flat above ~500 Hz, so this is fixed
-// with a gentle high-shelf after the soft-clip, not a tonestack change.
-// Tunable: raise/lower kPresenceShelfGainDb to taste.
-constexpr double kPresenceShelfFc = 3000.0;     // Hz — shelf corner
-constexpr double kPresenceShelfGainDb = 6.0;    // dB boost above the corner
+// ── Presence lift (post-clip brightness, clip-mode-dependent) ────────────────
+// The AAU thesis (3.5) measured the real pedal's tonestack carrying genuine
+// treble out to ~10 kHz, and characterizes the three clip modes differently:
+//   Silicon   = "harsher"/brighter clipper (3.4.2)  → most top lift.
+//   Germanium = "warmer, rounded" clipper     (3.4.1) → modest, stays warm.
+//   Bypass    = open/hairy (3.3.1)                  → light cut, avoid fizz.
+// A single fixed shelf voiced all three the same (Fairo's clip modes were
+// tonally flat in validation); the per-mode gain lets each read its own
+// character, matching the thesis. Corner is the "air/attack" band. The NAM
+// reference is itself dark (passive DI at capture), so tune by ear.
+constexpr double kPresenceShelfFc = 5000.0;               // Hz — corner (air/attack band)
+constexpr double kPresenceShelfGainDbSilicon   = 11.0;    // dB — bright/harsh
+constexpr double kPresenceShelfGainDbGermanium =  5.0;    // dB — warm
+constexpr double kPresenceShelfGainDbBypass    = -1.0;    // dB — tame the fizz
 
 // ── Parked Phase 3 neural "body/fat" enhancer (not used by the plugin) ──────
 // Measured when the WaveNet path was still wired: DSP sustains/compresses
