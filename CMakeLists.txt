@@ -242,7 +242,9 @@ if(FA_BUILD_TESTS)
             "${ONNX_INCLUDE_DIR}" "${ONNX_INCLUDE_DIR}/onnxruntime"
             "${CMAKE_BINARY_DIR}/Fairo_JuceHeader")
         target_link_libraries(FairoTests PRIVATE "${ONNX_LIB}" FairoData)
-        add_test(NAME fairo_neural_tests COMMAND FairoTests "[neural]")
+        # Catch2 [neural] also matches the latency case; exclude it here so
+        # `ctest -L unit` does not treat a CI-noisy benchmark as a hard gate.
+        add_test(NAME fairo_neural_tests COMMAND FairoTests "[neural]~[latency]")
         set_tests_properties(fairo_neural_tests PROPERTIES LABELS "unit;onnx")
         add_test(NAME fairo_neural_latency COMMAND FairoTests "[neural][latency][benchmark]")
         set_tests_properties(fairo_neural_latency PROPERTIES LABELS "onnx;benchmark")
@@ -265,6 +267,6 @@ if(FA_BUILD_TESTS)
     )
 
     include(CTest)
-    add_test(NAME fairo_dsp_tests COMMAND FairoTests)
+    add_test(NAME fairo_dsp_tests COMMAND FairoTests "~[neural]")
     set_tests_properties(fairo_dsp_tests PROPERTIES LABELS "unit")
 endif()
