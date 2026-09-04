@@ -31,7 +31,7 @@ jobs:
         run: cmake --build build --config Release --parallel
 
       - name: Run unit tests
-        run: ctest --test-dir build --output-on-failure --config Release -L unit
+        run: ctest --test-dir build --output-on-failure -L unit
 
       - name: Python sandbox cross-validation
         run: |
