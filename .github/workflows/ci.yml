@@ -35,6 +35,7 @@ jobs:
 
       - name: Python sandbox cross-validation
         run: |
-          python3 -m pip install -r python/requirements.txt
-          python3 python/diode_clipper.py
-          python3 python/tonestack.py
+          python3 -m venv .venv
+          .venv/bin/pip install -r python/requirements.txt
+          .venv/bin/python python/diode_clipper.py
+          .venv/bin/python python/tonestack.py
