@@ -144,16 +144,37 @@ jobs:
       - name: Stage Windows packages
         shell: pwsh
         run: |
+          $art = $null
+          foreach ($candidate in @(
+            "build\Fairo_artefacts\Release",
+            "build\Fairo_artefacts"
+          )) {
+            if (Test-Path (Join-Path $candidate "VST3\Fairo.vst3")) {
+              $art = $candidate
+              break
+            }
+          }
+          if (-not $art) {
+            Write-Host "Artefacts tree:"
+            if (Test-Path "build\Fairo_artefacts") {
+              Get-ChildItem -Recurse "build\Fairo_artefacts" | Select-Object -ExpandProperty FullName
+            } else {
+              Write-Host "build\Fairo_artefacts does not exist"
+            }
+            throw "No plugin output found."
+          }
+
           $paths = @()
-          $vst = "Fairo_artefacts/Release/VST3/Fairo.vst3"
+          $vst = Join-Path $art "VST3\Fairo.vst3"
+          $standalone = Join-Path $art "Standalone"
           if (Test-Path $vst) { $paths += $vst }
-          $standalone = "Fairo_artefacts/Release/Standalone"
           if (Test-Path $standalone) { $paths += $standalone }
-          if ($paths.Count -eq 0) { throw "No plugin output found." }
+          if ($paths.Count -eq 0) { throw "No plugin output found under $art." }
+
           $out = "dist\fairo-$env:VERSION-Windows-x64.zip"
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           Compress-Archive -Path $paths -DestinationPath $out -Force
-          Write-Host "Packaged: $out"
+          Write-Host "Packaged: $out from $art"
 
       - name: Upload Windows asset
         shell: pwsh
@@ -188,8 +209,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libasound2-dev libx11-dev libxext-dev libfreetype-dev \
-            libxkbcommon-dev libgl1-mesa-dev libfontconfig1-dev
+            libasound2-dev libjack-jackd2-dev ladspa-sdk \
+            libcurl4-openssl-dev \
+            libfreetype-dev libfontconfig1-dev \
+            libx11-dev libxcomposite-dev libxcursor-dev libxext-dev \
+            libxinerama-dev libxrandr-dev libxrender-dev \
+            libxkbcommon-dev libgl1-mesa-dev \
+            libwebkit2gtk-4.1-dev libgtk-3-dev \
+            libglu1-mesa-dev mesa-common-dev
 
       - name: Configure + build
         run: |
@@ -204,11 +231,22 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          VST_ROOT="Fairo_artefacts/Release/VST3/Fairo.vst3"
-          STANDALONE="Fairo_artefacts/Release/Standalone"
-          TAR_PATHS=("$VST_ROOT")
-          [ -d "$STANDALONE" ] && TAR_PATHS+=("$STANDALONE")
-          tar -czf "dist/fairo-${VERSION}-Linux-x64.tar.gz" "${TAR_PATHS[@]}"
+          ART=""
+          for candidate in build/Fairo_artefacts/Release build/Fairo_artefacts; do
+            if [ -d "$candidate/VST3/Fairo.vst3" ]; then
+              ART="$candidate"
+              break
+            fi
+          done
+          if [ -z "$ART" ]; then
+            echo "Artefacts tree:"
+            find build/Fairo_artefacts -print 2>/dev/null || echo "build/Fairo_artefacts does not exist"
+            echo "No plugin output found." >&2
+            exit 1
+          fi
+          TAR_PATHS=("VST3/Fairo.vst3")
+          [ -d "$ART/Standalone" ] && TAR_PATHS+=("Standalone")
+          tar -czf "dist/fairo-${VERSION}-Linux-x64.tar.gz" -C "$ART" "${TAR_PATHS[@]}"
           ls -lh "dist/fairo-${VERSION}-Linux-x64.tar.gz"
 
       - name: Upload Linux asset
