@@ -137,8 +137,8 @@ void FuzzEngine::reset()
     toneStack.reset();
     clip1.reset();
     clip2.reset();
-    fuzzGainSmoothed.reset(fuzzToGain(0.5f));
-    volumeSmoothed.reset(0.6f);
+    fuzzGainSmoothed.setCurrentAndTargetValue(fuzzToGain(0.5f));
+    volumeSmoothed.setCurrentAndTargetValue(0.6f);
     shelfX1 = shelfX2 = shelfY1 = shelfY2 = 0.0f;
     oversampling.reset();  // clear the polyphase filter state too
 }
@@ -165,9 +165,10 @@ void FuzzEngine::processPreparedBlock(const float* src, float* dst, int numSampl
 {
     osBuffer.copyFrom(0, 0, src, numSamples);
 
-    // Size the view to this block — wrapping the whole osBuffer then hoping
-    // getSubBlock sticks would let processSamplesUp see leftover capacity.
-    juce::dsp::AudioBlock<float> inBlock(osBuffer, 0, static_cast<size_t>(numSamples));
+    // JUCE 8.0.10: AudioBlock(buffer, start, count) does not exist. Build a
+    // view of this block only so processSamplesUp never sees leftover capacity.
+    juce::dsp::AudioBlock<float> inBlock(osBuffer);
+    inBlock = inBlock.getSubBlock(0, static_cast<size_t>(numSamples));
     juce::dsp::AudioBlock<float> upBlock = oversampling.processSamplesUp(inBlock);
     const int osSamples = static_cast<int>(upBlock.getNumSamples());
 
@@ -175,7 +176,8 @@ void FuzzEngine::processPreparedBlock(const float* src, float* dst, int numSampl
     for (int i = 0; i < osSamples; ++i)
         up[i] = processSampleInternal(up[i]);
 
-    juce::dsp::AudioBlock<float> outBlock(osBuffer, 0, static_cast<size_t>(numSamples));
+    juce::dsp::AudioBlock<float> outBlock(osBuffer);
+    outBlock = outBlock.getSubBlock(0, static_cast<size_t>(numSamples));
     oversampling.processSamplesDown(outBlock);
 
     std::copy(osBuffer.getReadPointer(0),
