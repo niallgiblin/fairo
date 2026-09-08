@@ -56,6 +56,16 @@ bool allFinite(const std::vector<float>& v)
     return std::all_of(v.begin(), v.end(), [](float s) { return std::isfinite(s); });
 }
 
+void processAll(FuzzEngine& engine, const float* src, float* dst, size_t n, int blockSize)
+{
+    for (size_t i = 0; i < n; )
+    {
+        const int m = static_cast<int>(std::min<size_t>(static_cast<size_t>(blockSize), n - i));
+        engine.processBlock(src + i, dst + i, m);
+        i += static_cast<size_t>(m);
+    }
+}
+
 TEST_CASE("DiodeClipper: 1N914 symmetric pair clips a 5 V sine at ~0.65 V", "[dsp][diode]")
 {
     DiodeClipper clipper;
@@ -240,11 +250,7 @@ TEST_CASE("FuzzEngine: end-to-end chain is finite, silence stays silent", "[dsp]
     // Loud riff-ish signal
     const std::vector<float> in = makeSine(48000.0, 220.0, 1.0, 2);
     std::vector<float> out(in.size());
-    for (size_t i = 0; i < in.size(); i += 512)
-    {
-        const int n = static_cast<int>(std::min<size_t>(512, in.size() - i));
-        engine.processBlock(in.data() + i, out.data() + i, n);
-    }
+    processAll(engine, in.data(), out.data(), in.size(), 512);
 
     REQUIRE(allFinite(out));
     CHECK(peakAbs(out) < 8.0f);
@@ -253,8 +259,7 @@ TEST_CASE("FuzzEngine: end-to-end chain is finite, silence stays silent", "[dsp]
     engine.reset();
     std::vector<float> silence(48000, 0.0f);
     std::vector<float> silentOut(silence.size());
-    for (size_t i = 0; i < silence.size(); i += 512)
-        engine.processBlock(silence.data() + i, silentOut.data() + i, 512);
+    processAll(engine, silence.data(), silentOut.data(), silence.size(), 512);
     REQUIRE(allFinite(silentOut));
 
     float residual = 0.0f;
@@ -296,8 +301,7 @@ TEST_CASE("FuzzEngine: switching clip mode mid-stream never produces NaN", "[dsp
     {
         engine.setClipMode(mode);
         std::vector<float> blockOut(48000);
-        for (size_t j = 0; j < blockOut.size(); j += 256)
-            engine.processBlock(in.data() + j, blockOut.data() + j, 256);
+        processAll(engine, in.data(), blockOut.data(), blockOut.size(), 256);
         for (float v : blockOut)
             energy[static_cast<size_t>(idx)] += v * v;
         ++idx;
@@ -314,11 +318,7 @@ TEST_CASE("FuzzEngine: Hi/Lo set before prepare() still engages Hi", "[dsp][engi
     auto peakAfterSettle = [&](FuzzEngine& e)
     {
         std::vector<float> out(in.size());
-        for (size_t i = 0; i < in.size(); i += 256)
-        {
-            const int n = static_cast<int>(std::min<size_t>(256, in.size() - i));
-            e.processBlock(in.data() + i, out.data() + i, n);
-        }
+        processAll(e, in.data(), out.data(), in.size(), 256);
         return peakAbs(out, static_cast<int>(in.size() / 2));
     };
 
