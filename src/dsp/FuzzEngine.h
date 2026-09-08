@@ -61,6 +61,9 @@ private:
     /** One sample at the oversampled rate (no allocation). */
     float processSampleInternal(float x) noexcept;
 
+    /** Process a block no larger than the size given to prepare(). */
+    void processPreparedBlock(const float* src, float* dst, int numSamples) noexcept;
+
     /** Rebuild the stage-2 branch (clipper config or bypass knee). */
     void applyClipMode() noexcept;
 
@@ -100,6 +103,7 @@ private:
     float shelfX1 = 0.0f, shelfX2 = 0.0f, shelfY1 = 0.0f, shelfY2 = 0.0f;
 
     juce::AudioBuffer<float> osBuffer;  // internal oversampled scratch (no audio-thread alloc)
+    int maxInputSamples_ = 0;           // prepare() block size; processBlock chunks if larger
 
     ClipMode clipMode = ClipMode::Silicon;
     bool hiLo = false;                  // false = Lo

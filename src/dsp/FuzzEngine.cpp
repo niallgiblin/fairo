@@ -35,7 +35,6 @@ inline float bypassSaturate(float x, float vSat) noexcept
 
 void FuzzEngine::prepare(double sampleRate, int maxBlockSize)
 {
-    const int maxOs = std::max(2, maxBlockSize * circuit::kOversamplingFactor);
     osSampleRate_ = sampleRate * circuit::kOversamplingFactor;
 
     // Linear network topology (values in CircuitValues.h; see comments there).
@@ -74,8 +73,9 @@ void FuzzEngine::prepare(double sampleRate, int maxBlockSize)
 
     // JUCE Oversampling::initProcessing takes the max *input* (pre-OS) samples
     // per block and sizes its internal filters for 2x that.
-    oversampling.initProcessing(static_cast<size_t>(std::max(2, maxBlockSize)));
-    osBuffer.setSize(1, maxOs);
+    maxInputSamples_ = std::max(2, maxBlockSize);
+    oversampling.initProcessing(static_cast<size_t>(maxInputSamples_));
+    osBuffer.setSize(1, maxInputSamples_ * circuit::kOversamplingFactor);
 
     fuzzGainSmoothed.reset(sampleRate * circuit::kOversamplingFactor, 0.01);
     volumeSmoothed.reset(sampleRate * circuit::kOversamplingFactor, 0.01);
@@ -148,11 +148,26 @@ void FuzzEngine::processBlock(const float* src, float* dst, int numSamples)
     if (!prepared || numSamples <= 0 || src == nullptr || dst == nullptr)
         return;
 
-    // ── Oversample (JUCE 8 API: processSamplesUp returns the upsample block) ─
-    osBuffer.copyFrom(0, 0, src, numSamples);
-    juce::dsp::AudioBlock<float> inBlock(osBuffer);
-    inBlock = inBlock.getSubBlock(0, static_cast<size_t>(numSamples));
+    // Hosts (and tests) can pass a remainder smaller *or* a buffer larger than
+    // prepare(). JUCE's oversampler is sized for maxInputSamples_; exceeding
+    // that is a heap overrun (STATUS_HEAP_CORRUPTION / glibc double-free).
+    const int maxIn = std::max(1, maxInputSamples_);
+    int offset = 0;
+    while (offset < numSamples)
+    {
+        const int n = std::min(numSamples - offset, maxIn);
+        processPreparedBlock(src + offset, dst + offset, n);
+        offset += n;
+    }
+}
 
+void FuzzEngine::processPreparedBlock(const float* src, float* dst, int numSamples) noexcept
+{
+    osBuffer.copyFrom(0, 0, src, numSamples);
+
+    // Size the view to this block — wrapping the whole osBuffer then hoping
+    // getSubBlock sticks would let processSamplesUp see leftover capacity.
+    juce::dsp::AudioBlock<float> inBlock(osBuffer, 0, static_cast<size_t>(numSamples));
     juce::dsp::AudioBlock<float> upBlock = oversampling.processSamplesUp(inBlock);
     const int osSamples = static_cast<int>(upBlock.getNumSamples());
 
@@ -160,9 +175,7 @@ void FuzzEngine::processBlock(const float* src, float* dst, int numSamples)
     for (int i = 0; i < osSamples; ++i)
         up[i] = processSampleInternal(up[i]);
 
-    // ── Downsample (writes numSamples floats back into osBuffer) ────────────
-    juce::dsp::AudioBlock<float> outBlock(osBuffer);
-    outBlock = outBlock.getSubBlock(0, static_cast<size_t>(numSamples));
+    juce::dsp::AudioBlock<float> outBlock(osBuffer, 0, static_cast<size_t>(numSamples));
     oversampling.processSamplesDown(outBlock);
 
     std::copy(osBuffer.getReadPointer(0),

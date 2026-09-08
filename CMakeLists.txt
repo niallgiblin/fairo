@@ -261,9 +261,12 @@ if(FA_BUILD_TESTS)
             /W4 /O2 /fp:fast)
     endif()
 
+    # DSP tests only need juce_dsp (and its deps). Linking the plugin's GUI /
+    # plugin-client modules into a console Catch2 binary is a known Windows
+    # heap-corruption-at-exit path (0xC0000374) and is unused here.
     target_link_libraries(FairoTests PRIVATE
         Catch2::Catch2WithMain
-        ${JUCE_MODULES}
+        juce::juce_dsp
     )
 
     include(CTest)
