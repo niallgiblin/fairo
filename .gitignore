@@ -49,3 +49,8 @@ python/.venv/
 training/data/
 training/artifacts/
 training/.venv/
+
+.offline/
+.research/
+peaks/
+Media/
